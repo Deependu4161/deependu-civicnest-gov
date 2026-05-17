@@ -1,0 +1,28 @@
+{% extends "base.html" %}
+{% block title %}Profile{% endblock %}
+{% block nav_tenant %}active{% endblock %}
+{% block content %}
+{% with active="profile" lease=None %}
+<div class="shell">
+  {% include "partials/sidebar_tenant.html" %}
+  <div class="main"><div class="panel fade-up" style="max-width:600px;">
+    <div class="pg-intro"><h2>My Profile</h2><p>Update your personal information</p></div>
+    <div class="card">
+      <div style="display:flex;align-items:center;gap:16px;margin-bottom:24px;padding-bottom:20px;border-bottom:1px solid var(--g100);">
+        <div style="width:60px;height:60px;border-radius:50%;background:linear-gradient(135deg,var(--n500),var(--n300));display:flex;align-items:center;justify-content:center;font-size:22px;font-weight:800;color:#fff;">{{ user.avatar_initials }}</div>
+        <div><div style="font-size:18px;font-weight:800;color:var(--g900);">{{ user.get_full_name|default:user.username }}</div><div style="font-size:13px;color:var(--g400);">Tenant · {{ user.email }}</div></div>
+      </div>
+      <form method="post">{% csrf_token %}
+        <div class="row g-3">
+          <div class="col-md-6"><label class="form-label">First Name</label><input type="text" name="first_name" class="form-ctrl" value="{{ user.first_name }}"></div>
+          <div class="col-md-6"><label class="form-label">Last Name</label><input type="text" name="last_name" class="form-ctrl" value="{{ user.last_name }}"></div>
+          <div class="col-md-6"><label class="form-label">Email</label><input type="email" name="email" class="form-ctrl" value="{{ user.email }}"></div>
+          <div class="col-md-6"><label class="form-label">Phone</label><input type="text" name="phone" class="form-ctrl" value="{{ user.phone }}"></div>
+        </div>
+        <button type="submit" class="btn-tp btn-primary mt-4">Save Changes</button>
+      </form>
+    </div>
+  </div></div>
+</div>
+{% endwith %}
+{% endblock %}

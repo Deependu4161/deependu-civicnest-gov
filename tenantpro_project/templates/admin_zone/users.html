@@ -1,0 +1,26 @@
+{% extends "base.html" %}
+{% block title %}Users{% endblock %}
+{% block nav_admin %}active{% endblock %}
+{% block content %}
+<div class="shell">
+  {% with active="users" %}{% include "partials/sidebar_admin.html" %}{% endwith %}
+  <div class="main"><div class="panel fade-up">
+    <div class="pg-intro"><h2>All Users</h2><p>Manage platform users by role</p></div>
+    <div class="card">
+      <table class="tp-table">
+        <thead><tr><th>User</th><th>Email</th><th>Role</th><th>Phone</th><th>Joined</th><th>Status</th></tr></thead>
+        <tbody>{% for u in users %}
+        <tr>
+          <td><div style="display:flex;align-items:center;gap:10px;"><div style="width:34px;height:34px;border-radius:50%;background:linear-gradient(135deg,{% if u.role == 'admin' %}var(--a500),var(--a400){% elif u.role == 'owner' %}var(--green),#34d399{% elif u.role == 'society_admin' %}var(--cyan),#38bdf8{% else %}var(--n500),var(--n300){% endif %});display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:800;color:#fff;">{{ u.avatar_initials }}</div><div><div style="font-weight:700;">{{ u.get_full_name|default:u.username }}</div><div style="font-size:11px;color:var(--g400);">@{{ u.username }}</div></div></div></td>
+          <td style="color:var(--g400);">{{ u.email }}</td>
+          <td><span class="badge {% if u.role == 'admin' %}b-pending{% elif u.role == 'owner' %}b-paid{% elif u.role == 'society_admin' %}b-progress{% else %}b-info{% endif %}">{{ u.get_role_display }}</span></td>
+          <td style="color:var(--g400);">{{ u.phone|default:"—" }}</td>
+          <td style="color:var(--g400);font-size:12.5px;">{{ u.date_joined|date:"d M Y" }}</td>
+          <td><span class="badge {% if u.is_active %}b-active{% else %}b-expired{% endif %}">{% if u.is_active %}Active{% else %}Inactive{% endif %}</span></td>
+        </tr>
+        {% endfor %}</tbody>
+      </table>
+    </div>
+  </div></div>
+</div>
+{% endblock %}

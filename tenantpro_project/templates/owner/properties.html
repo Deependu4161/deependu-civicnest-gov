@@ -1,0 +1,210 @@
+{% extends "base.html" %}
+{% block title %}My Properties{% endblock %}
+{% block nav_owner %}active{% endblock %}
+
+{% block extra_css %}
+<style>
+.prop-card{background:#fff;border:1.5px solid #E8EDF5;border-radius:16px;overflow:hidden;
+  box-shadow:0 2px 12px rgba(61,107,229,.07);transition:transform .2s}
+.prop-card:hover{transform:translateY(-3px)}
+.prop-banner{height:90px;background:linear-gradient(135deg,#1A1F5E,#3D6BE5);
+  display:flex;align-items:center;justify-content:center;font-size:36px}
+.prop-body{padding:16px}
+.prop-name{font-weight:800;font-size:15px;color:#1A1F5E;margin-bottom:3px}
+.prop-addr{font-size:12px;color:#8896B0;margin-bottom:10px}
+.prop-pills{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:12px}
+.pp{font-size:11px;font-weight:700;padding:3px 10px;border-radius:20px}
+.pp-blue{background:#EEF2FF;color:#3D6BE5}
+.pp-green{background:#ECFDF5;color:#16A34A}
+.pp-amber{background:#FFFBEB;color:#D97706}
+.pp-red{background:#FEF2F2;color:#DC2626}
+.pp-purple{background:#F3E8FF;color:#7C3AED;border:1.5px solid #DDD6FE}
+.prop-actions{display:flex;gap:6px;flex-wrap:wrap}
+.btn-xs{padding:5px 12px;border-radius:8px;font-size:11px;font-weight:700;cursor:pointer;border:none;transition:all .15s;text-decoration:none;display:inline-block}
+.btn-xs-blue{background:#EEF2FF;color:#3D6BE5}.btn-xs-blue:hover{background:#3D6BE5;color:#fff}
+.btn-xs-green{background:#ECFDF5;color:#16A34A}.btn-xs-green:hover{background:#16A34A;color:#fff}
+.unit-list{margin-top:12px;border-top:1px solid #F1F5F9;padding-top:12px}
+.unit-row{display:flex;align-items:center;justify-content:space-between;padding:6px 0;
+  border-bottom:1px solid #F8FAFF;font-size:12px}
+.unit-row:last-child{border-bottom:none}
+.unit-num{font-weight:700;color:#1A1F5E;font-size:13px}
+.unit-rent{font-family:monospace;font-weight:700;color:#374151}
+.u-vacant{background:#ECFDF5;color:#16A34A;padding:2px 8px;border-radius:20px;font-size:10px;font-weight:700}
+.u-occupied{background:#FEF2F2;color:#DC2626;padding:2px 8px;border-radius:20px;font-size:10px;font-weight:700}
+/* Add property form */
+.form-card{background:#fff;border:1.5px solid #E8EDF5;border-radius:16px;padding:22px 24px;
+  margin-bottom:22px;box-shadow:0 2px 12px rgba(61,107,229,.07)}
+.form-card-title{font-size:15px;font-weight:800;color:#1A1F5E;margin-bottom:16px;
+  display:flex;align-items:center;gap:8px}
+/* Add unit modal */
+.unit-modal{position:fixed;inset:0;z-index:9000;background:rgba(10,15,50,.55);backdrop-filter:blur(4px);
+  display:flex;align-items:center;justify-content:center;opacity:0;pointer-events:none;transition:opacity .2s}
+.unit-modal.open{opacity:1;pointer-events:all}
+.unit-modal-box{background:#fff;border-radius:20px;width:480px;max-width:95vw;
+  box-shadow:0 24px 60px rgba(10,15,50,.2);transform:scale(.94);transition:transform .25s cubic-bezier(.34,1.56,.64,1)}
+.unit-modal.open .unit-modal-box{transform:scale(1)}
+.um-hd{padding:20px 24px 0;display:flex;align-items:center;justify-content:space-between}
+.um-title{font-size:15px;font-weight:800;color:#1A1F5E}
+.um-close{width:30px;height:30px;border-radius:50%;border:none;background:#F1F5F9;cursor:pointer;
+  display:flex;align-items:center;justify-content:center;font-size:15px;color:#64748B}
+.um-close:hover{background:#E2E8F0}
+.um-body{padding:20px 24px 24px}
+.form-ctrl{width:100%;padding:10px 13px;border:1.5px solid #E8EDF5;border-radius:10px;font-size:13px;
+  font-family:inherit;outline:none;transition:border .15s;box-sizing:border-box}
+.form-ctrl:focus{border-color:#3D6BE5}
+.form-label{font-size:12px;font-weight:700;color:#374151;margin-bottom:5px;display:block}
+.empty-state{text-align:center;padding:60px 20px;color:#8896B0}
+.empty-icon{font-size:48px;margin-bottom:12px}
+</style>
+{% endblock %}
+
+{% block content %}
+{% with active="props" %}
+<div class="shell">
+  {% include "partials/sidebar_owner.html" %}
+  <div class="main"><div class="panel fade-up">
+
+    <div class="pg-intro d-flex align-items-center justify-content-between flex-wrap gap-2" style="margin-bottom:20px">
+      <div><h2>🏘 My Properties</h2><p>Manage your property portfolio and units</p></div>
+      <button onclick="toggleForm()" class="btn-tp btn-primary btn-sm">+ Add Property</button>
+    </div>
+
+    <!-- Add Property Form -->
+    <div id="add-prop" style="display:none;" class="form-card">
+      <div class="form-card-title">🏠 Add New Property</div>
+      <form method="post">{% csrf_token %}
+        <input type="hidden" name="action" value="add_property">
+        <div class="row g-3">
+          <div class="col-md-6"><label class="form-label">Property Name *</label><input type="text" name="name" class="form-ctrl" placeholder="e.g. Sunrise Residency" required></div>
+          <div class="col-md-6"><label class="form-label">Type</label>
+            <select name="property_type" class="form-ctrl">
+              <option value="apartment">Apartment</option><option value="villa">Villa</option>
+              <option value="commercial">Commercial</option><option value="pg">PG/Hostel</option>
+            </select>
+          </div>
+          <div class="col-12"><label class="form-label">Address *</label><textarea name="address" class="form-ctrl" placeholder="Full address…" style="min-height:60px;" required></textarea></div>
+          <div class="col-md-3"><label class="form-label">City *</label><input type="text" name="city" class="form-ctrl" placeholder="Mumbai" required></div>
+          <div class="col-md-3"><label class="form-label">State</label><input type="text" name="state" class="form-ctrl" placeholder="Maharashtra"></div>
+          <div class="col-md-3"><label class="form-label">Pincode</label><input type="text" name="pincode" class="form-ctrl" placeholder="400001"></div>
+          <div class="col-md-3"><label class="form-label">No. of Units *</label><input type="number" name="total_units" class="form-ctrl" value="1" min="1" max="100" required></div>
+          <div class="col-md-4"><label class="form-label">Monthly Rent (₹)</label><input type="number" name="monthly_rent" class="form-ctrl" placeholder="15000"></div>
+          <div class="col-md-4"><label class="form-label">Security Deposit (₹)</label><input type="number" name="security_deposit" class="form-ctrl" placeholder="30000"></div>
+          <div class="col-md-4"><label class="form-label">Bedrooms per Unit</label><input type="number" name="bedrooms" class="form-ctrl" value="2" min="0" max="10"></div>
+        </div>
+        <div style="display:flex;gap:10px;margin-top:18px">
+          <button type="submit" class="btn-tp btn-primary">✅ Add Property &amp; Auto-create Units</button>
+          <button type="button" onclick="toggleForm()" class="btn-tp btn-ghost">Cancel</button>
+        </div>
+      </form>
+    </div>
+
+    <!-- Property Cards -->
+    {% if props %}
+    <div class="row g-3">
+      {% for p in props %}
+      <div class="col-md-6 col-xl-4">
+        <div class="prop-card">
+          <div class="prop-banner">🏠</div>
+          <div class="prop-body">
+            <div class="prop-name">{{ p.name }}</div>
+            <div class="prop-addr">📍 {{ p.city }}{% if p.state %}, {{ p.state }}{% endif %}</div>
+            <div class="prop-pills">
+              <span class="pp pp-blue">{{ p.total_units }} Units total</span>
+              <span class="pp pp-green">{{ p.occupied_units }} Occupied</span>
+              {% with vacant=p.units.all|length %}
+              <span class="pp {% if p.property_type == 'pg' %}pp-purple{% elif p.property_type == 'apartment' %}pp-blue{% elif p.property_type == 'villa' %}pp-green{% else %}pp-amber{% endif %}">{{ p.get_property_type_display }}</span>
+              {% endwith %}
+            </div>
+
+            <!-- Unit list -->
+            {% if p.units.all %}
+            <div class="unit-list">
+              <div style="font-size:11px;font-weight:700;color:#8896B0;text-transform:uppercase;letter-spacing:.5px;margin-bottom:8px">Units</div>
+              {% for u in p.units.all %}
+              <div class="unit-row">
+                <div>
+                  <span class="unit-num">Unit {{ u.unit_number }}</span>
+                  {% if u.floor %}<span style="color:#8896B0;font-size:11px"> · Floor {{ u.floor }}</span>{% endif %}
+                  {% if u.bedrooms %}<span style="color:#8896B0;font-size:11px"> · {{ u.bedrooms }}BHK</span>{% endif %}
+                </div>
+                <div style="display:flex;align-items:center;gap:8px">
+                  <span class="unit-rent">₹{{ u.monthly_rent }}</span>
+                  {% if u.is_occupied %}<span class="u-occupied">Occupied</span>{% else %}<span class="u-vacant">Vacant</span>{% endif %}
+                </div>
+              </div>
+              {% endfor %}
+            </div>
+            {% else %}
+            <div style="padding:12px;background:#FFFBEB;border-radius:10px;font-size:12px;color:#92400E;display:flex;align-items:center;gap:8px">
+              <span>⚠️</span>
+              <span>No units created yet. Add units below to create leases.</span>
+            </div>
+            {% endif %}
+
+            <div class="prop-actions" style="margin-top:12px">
+              <button onclick="openAddUnit({{ p.id }},'{{ p.name|escapejs }}')" class="btn-xs btn-xs-green">+ Add Unit</button>
+              <a href="/owner/tenants/" class="btn-xs btn-xs-blue">👥 Tenants</a>
+            </div>
+          </div>
+        </div>
+      </div>
+      {% endfor %}
+    </div>
+    {% else %}
+    <div class="empty-state">
+      <div class="empty-icon">🏠</div>
+      <div style="font-size:16px;font-weight:700;color:#374151;margin-bottom:6px">No properties yet</div>
+      <div style="font-size:13px">Click "Add Property" to get started</div>
+    </div>
+    {% endif %}
+
+  </div></div>
+</div>
+
+<!-- Add Unit Modal -->
+<div class="unit-modal" id="unitModal">
+  <div class="unit-modal-box">
+    <div class="um-hd">
+      <div class="um-title">➕ Add Unit</div>
+      <button class="um-close" onclick="closeUnitModal()">✕</button>
+    </div>
+    <div class="um-body">
+      <form method="post">{% csrf_token %}
+        <input type="hidden" name="action" value="add_unit">
+        <input type="hidden" name="property_id" id="um-prop-id">
+        <div style="background:#EEF2FF;border-radius:10px;padding:10px 14px;margin-bottom:16px;font-size:13px;font-weight:700;color:#1A1F5E" id="um-prop-name"></div>
+        <div class="row g-3">
+          <div class="col-6"><label class="form-label">Unit Number *</label><input type="text" name="unit_number" class="form-ctrl" placeholder="e.g. 101, A1, G1" required></div>
+          <div class="col-6"><label class="form-label">Floor</label><input type="text" name="floor" class="form-ctrl" placeholder="e.g. 1, Ground"></div>
+          <div class="col-6"><label class="form-label">Monthly Rent (₹) *</label><input type="number" name="monthly_rent" class="form-ctrl" placeholder="15000" required></div>
+          <div class="col-6"><label class="form-label">Security Deposit (₹)</label><input type="number" name="security_deposit" class="form-ctrl" placeholder="30000"></div>
+          <div class="col-6"><label class="form-label">Bedrooms</label><input type="number" name="bedrooms" class="form-ctrl" value="2" min="0" max="10"></div>
+          <div class="col-6"><label class="form-label">Area (sq.ft)</label><input type="number" name="area_sqft" class="form-ctrl" placeholder="800"></div>
+        </div>
+        <div style="display:flex;gap:10px;margin-top:18px">
+          <button type="submit" class="btn-tp btn-green" style="flex:1">✅ Add Unit</button>
+          <button type="button" onclick="closeUnitModal()" class="btn-tp btn-ghost">Cancel</button>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
+{% endwith %}
+{% endblock %}
+
+{% block extra_js %}
+<script>
+function toggleForm(){
+  const f=document.getElementById('add-prop');
+  f.style.display=f.style.display==='none'?'block':'none';
+  if(f.style.display==='block')f.scrollIntoView({behavior:'smooth',block:'start'});
+}
+function openAddUnit(propId,propName){
+  document.getElementById('um-prop-id').value=propId;
+  document.getElementById('um-prop-name').textContent='🏠 '+propName;
+  document.getElementById('unitModal').classList.add('open');
+}
+function closeUnitModal(){document.getElementById('unitModal').classList.remove('open');}
+document.getElementById('unitModal').addEventListener('click',function(e){if(e.target===this)closeUnitModal();});
+</script>
+{% endblock %}

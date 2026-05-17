@@ -1,0 +1,63 @@
+{% extends "base.html" %}
+{% block title %}Rent{% endblock %}
+{% block nav_owner %}active{% endblock %}
+{% block content %}
+<div class="shell">
+  {% with active="rent" %}{% include "partials/sidebar_owner.html" %}{% endwith %}
+  <div class="main"><div class="panel fade-up">
+    <div class="pg-intro d-flex align-items-center justify-content-between flex-wrap gap-2">
+      <div><h2>💰 Rent Management</h2><p>Track payments and send due alerts to tenants</p></div>
+    </div>
+    <!-- Fix 1i: Send Payment Due Alert to Tenant -->
+    {% if active_leases %}
+    <div class="card mb-4" style="border:2px solid #FEF3C7;background:#FFFBEB;">
+      <div style="padding:16px 20px;">
+        <div style="font-size:14px;font-weight:800;color:#92400E;margin-bottom:12px;">🔔 Send Rent Due Alert to Tenant</div>
+        <form method="post" style="display:flex;gap:10px;align-items:flex-end;flex-wrap:wrap;">
+          {% csrf_token %}
+          <input type="hidden" name="action" value="send_due_alert">
+          <div style="flex:1;min-width:200px;">
+            <label style="font-size:11px;font-weight:700;color:#92400E;display:block;margin-bottom:4px;">Select Tenant / Lease</label>
+            <select name="lease_id" class="form-ctrl">
+              {% for lease in active_leases %}
+              <option value="{{ lease.id }}">{{ lease.tenant.get_full_name|default:lease.tenant.username }} — Unit {{ lease.unit.unit_number }} (₹{{ lease.monthly_rent }}/mo)</option>
+              {% endfor %}
+            </select>
+          </div>
+          <button type="submit" class="btn-tp" style="background:#F59E0B;color:#fff;border:none;white-space:nowrap;">🔔 Send Alert</button>
+        </form>
+        <div style="font-size:11px;color:#B45309;margin-top:8px;">This creates a pending payment record for the current month and sends a notification to the tenant to pay via the Rent section.</div>
+      </div>
+    </div>
+    {% endif %}
+    <div class="row g-3 mb-4">
+      <div class="col-md-4"><div class="sc c-green"><div class="sc-icon" style="background:var(--green-l);font-size:20px;">✅</div><div class="sc-lbl">Collected</div><div class="sc-val" style="font-size:20px;">₹{{ paid }}</div><div class="sc-trend t-up">Paid</div></div></div>
+      <div class="col-md-4"><div class="sc c-amber"><div class="sc-icon" style="background:var(--a50);font-size:20px;">⏳</div><div class="sc-lbl">Pending</div><div class="sc-val" style="font-size:20px;">₹{{ pending }}</div><div class="sc-trend t-amber">Awaiting</div></div></div>
+      <div class="col-md-4"><div class="sc c-navy"><div class="sc-icon" style="background:var(--n100);font-size:20px;">📊</div><div class="sc-lbl">Total Records</div><div class="sc-val">{{ payments|length }}</div><div class="sc-trend t-neu">All time</div></div></div>
+    </div>
+    <div class="card">
+      <table class="tp-table">
+        <thead><tr><th>Tenant</th><th>Unit</th><th>Month</th><th>Amount</th><th>Due Date</th><th>Status</th><th>Mark Paid</th></tr></thead>
+        <tbody>{% for p in payments %}
+        <tr>
+          <td style="font-weight:600;">{{ p.lease.tenant.get_full_name|default:p.lease.tenant.username }}</td>
+          <td>{{ p.lease.unit.unit_number }}</td>
+          <td>{{ p.month_year }}</td>
+          <td style="font-family:var(--mono);font-weight:700;">₹{{ p.amount }}</td>
+          <td>{{ p.due_date|date:"d M Y" }}</td>
+          <td><span class="badge b-{{ p.status }}">{{ p.get_status_display }}</span></td>
+          <td>{% if p.status == 'pending' %}
+            <form method="post" style="display:inline-flex;gap:4px;">{% csrf_token %}
+              <input type="hidden" name="pay_id" value="{{ p.id }}">
+              <select name="method" class="form-ctrl" style="padding:4px 8px;font-size:12px;width:auto;"><option value="upi">UPI</option><option value="bank_transfer">Bank</option><option value="cash">Cash</option></select>
+              <button type="submit" class="btn-tp btn-green btn-xs">Confirm</button>
+            </form>
+          {% else %}—{% endif %}</td>
+        </tr>
+        {% empty %}<tr><td colspan="7" style="text-align:center;padding:30px;color:var(--g300);">No records</td></tr>
+        {% endfor %}</tbody>
+      </table>
+    </div>
+  </div></div>
+</div>
+{% endblock %}

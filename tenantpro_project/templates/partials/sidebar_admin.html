@@ -1,0 +1,18 @@
+<aside class="sidebar" id="tp-sidebar">
+  <div class="sb-head">
+    <div class="sb-logo"><div class="sb-logo-mark adm">⚙️</div><div><div class="sb-logo-text">CivicNest</div><div class="sb-logo-sub">Admin Zone</div></div></div>
+    <div class="sb-zone-pill zp-adm">⚙ Platform Admin</div>
+    <div class="sb-user"><div class="sb-av av-adm">{{ user.avatar_initials }}</div><div><div class="sb-uname">{{ user.get_full_name|default:user.username }}</div><div class="sb-urole">Administrator</div></div></div>
+  </div>
+  <div class="sb-sec">Overview</div>
+  <a class="ni {% if active == 'dash' %}active-adm{% endif %}" href="/admin-zone/"><span class="ni-icon">📊</span>Dashboard</a>
+  <a class="ni {% if active == 'props' %}active-adm{% endif %}" href="/admin-zone/properties/"><span class="ni-icon">🏠</span>Properties</a>
+  <a class="ni {% if active == 'users' %}active-adm{% endif %}" href="/admin-zone/users/"><span class="ni-icon">👥</span>Users</a>
+  <div class="sb-sec">Finance & Ops</div>
+  <a class="ni {% if active == 'rent' %}active-adm{% endif %}" href="/admin-zone/rent/"><span class="ni-icon">💰</span>Rent Management</a>
+  <a class="ni {% if active == 'maint' %}active-adm{% endif %}" href="/admin-zone/maintenance/"><span class="ni-icon">🔧</span>Maintenance</a>
+  <a class="ni {% if active == 'verify' %}active-adm{% endif %}" href="/admin-zone/verify/"><span class="ni-icon">✅</span>Verification</a>
+  <a class="ni {% if active == 'announce' %}active-adm{% endif %}" href="/admin-zone/announcements/"><span class="ni-icon">📢</span>Announcements</a>
+  <a class="ni {% if active == 'reports' %}active-adm{% endif %}" href="/admin-zone/reports/"><span class="ni-icon">📈</span>Reports</a>
+  <div class="sb-foot"><a href="/accounts/logout/" class="sb-logout"><i class="fa fa-right-from-bracket"></i> Sign Out</a></div>
+</aside>

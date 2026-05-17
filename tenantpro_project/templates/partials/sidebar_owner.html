@@ -1,0 +1,19 @@
+<aside class="sidebar" id="tp-sidebar">
+  <div class="sb-head">
+    <div class="sb-logo"><div class="sb-logo-mark own">🏘️</div><div><div class="sb-logo-text">CivicNest</div><div class="sb-logo-sub">Owner Portal</div></div></div>
+    <div class="sb-zone-pill zp-own">🏘️ Owner Zone</div>
+    <div class="sb-user"><div class="sb-av av-own">{{ user.avatar_initials }}</div><div><div class="sb-uname">{{ user.get_full_name|default:user.username }}</div><div class="sb-urole">Property Owner</div></div></div>
+  </div>
+  <div class="sb-sec">Overview</div>
+  <a class="ni {% if active == 'dash' %}active-own{% endif %}" href="/owner/"><span class="ni-icon">📊</span>Dashboard</a>
+  <a class="ni {% if active == 'props' %}active-own{% endif %}" href="/owner/properties/"><span class="ni-icon">🏠</span>My Properties</a>
+  <a class="ni {% if active == 'tenants' %}active-own{% endif %}" href="/owner/tenants/"><span class="ni-icon">👥</span>Tenants</a>
+  <div class="sb-sec">Finance</div>
+  <a class="ni {% if active == 'rent' %}active-own{% endif %}" href="/owner/rent/"><span class="ni-icon">💰</span>Rent</a>
+  <a class="ni {% if active == 'leases' %}active-own{% endif %}" href="/owner/leases/"><span class="ni-icon">📄</span>Leases</a>
+  <div class="sb-sec">Services</div>
+  <a class="ni {% if active == 'maint' %}active-own{% endif %}" href="/owner/maintenance/"><span class="ni-icon">🔧</span>Maintenance</a>
+  <a class="ni {% if active == 'complaints' %}active-own{% endif %}" href="/owner/complaints/"><span class="ni-icon">📝</span>Complaints</a>
+  <a class="ni {% if active == 'chat' %}active-own{% endif %}" href="/owner/messages/"><span class="ni-icon">💬</span>Messages</a>
+  <div class="sb-foot"><a href="/accounts/logout/" class="sb-logout"><i class="fa fa-right-from-bracket"></i> Sign Out</a></div>
+</aside>

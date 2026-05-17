@@ -1,0 +1,29 @@
+{% extends "base.html" %}
+{% block title %}Payment History{% endblock %}
+{% block nav_tenant %}active{% endblock %}
+{% block content %}
+{% with active="history" lease=None %}
+<div class="shell">
+  {% include "partials/sidebar_tenant.html" %}
+  <div class="main"><div class="panel fade-up">
+    <div class="pg-intro"><h2>Payment History</h2><p>Your complete rent payment record</p></div>
+    <div class="card">
+      <table class="tp-table">
+        <thead><tr><th>Month</th><th>Amount</th><th>Paid On</th><th>Method</th><th>Transaction ID</th><th>Status</th></tr></thead>
+        <tbody>{% for p in payments %}
+        <tr>
+          <td style="font-weight:700;">{{ p.month_year }}</td>
+          <td style="font-family:var(--mono);font-weight:700;color:var(--green);">₹{{ p.amount }}</td>
+          <td>{{ p.paid_date|date:"d M Y" }}</td>
+          <td>{{ p.get_payment_method_display|default:"—" }}</td>
+          <td style="font-family:var(--mono);font-size:12px;color:var(--g400);">{{ p.transaction_id|default:"—" }}</td>
+          <td><span class="badge b-paid">Paid</span></td>
+        </tr>
+        {% empty %}<tr><td colspan="6" style="text-align:center;padding:40px;color:var(--g300);">No paid payments yet</td></tr>
+        {% endfor %}</tbody>
+      </table>
+    </div>
+  </div></div>
+</div>
+{% endwith %}
+{% endblock %}

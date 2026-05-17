@@ -1,0 +1,33 @@
+{% extends "base.html" %}
+{% block title %}Rent Management{% endblock %}
+{% block nav_admin %}active{% endblock %}
+{% block content %}
+<div class="shell">
+  {% with active="rent" %}{% include "partials/sidebar_admin.html" %}{% endwith %}
+  <div class="main"><div class="panel fade-up">
+    <div class="pg-intro"><h2>Rent Management</h2><p>Platform-wide payment overview</p></div>
+    <div class="row g-3 mb-4">
+      <div class="col-md-4"><div class="sc c-green"><div class="sc-icon" style="background:var(--green-l);font-size:20px;">✅</div><div class="sc-lbl">Collected</div><div class="sc-val" style="font-size:18px;">₹{{ paid }}</div></div></div>
+      <div class="col-md-4"><div class="sc c-amber"><div class="sc-icon" style="background:var(--a50);font-size:20px;">⏳</div><div class="sc-lbl">Pending</div><div class="sc-val" style="font-size:18px;">₹{{ pending }}</div></div></div>
+      <div class="col-md-4"><div class="sc c-red"><div class="sc-icon" style="background:var(--red-l);font-size:20px;">⚠️</div><div class="sc-lbl">Overdue</div><div class="sc-val" style="font-size:18px;">₹{{ overdue }}</div></div></div>
+    </div>
+    <div class="card">
+      <table class="tp-table">
+        <thead><tr><th>Tenant</th><th>Owner</th><th>Unit</th><th>Month</th><th>Amount</th><th>Due Date</th><th>Status</th></tr></thead>
+        <tbody>{% for p in payments %}
+        <tr>
+          <td style="font-weight:600;">{{ p.lease.tenant.get_full_name|default:p.lease.tenant.username }}</td>
+          <td style="color:var(--g400);">{{ p.lease.owner.get_full_name|default:p.lease.owner.username }}</td>
+          <td>{{ p.lease.unit.unit_number }}</td>
+          <td>{{ p.month_year }}</td>
+          <td style="font-family:var(--mono);font-weight:700;">₹{{ p.amount }}</td>
+          <td style="color:var(--g400);">{{ p.due_date|date:"d M Y" }}</td>
+          <td><span class="badge b-{{ p.status }}">{{ p.get_status_display }}</span></td>
+        </tr>
+        {% empty %}<tr><td colspan="7" style="text-align:center;padding:30px;color:var(--g300);">No records</td></tr>
+        {% endfor %}</tbody>
+      </table>
+    </div>
+  </div></div>
+</div>
+{% endblock %}

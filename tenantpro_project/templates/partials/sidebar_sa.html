@@ -1,0 +1,18 @@
+<aside class="sidebar" id="tp-sidebar">
+  <div class="sb-head">
+    <div class="sb-logo"><div class="sb-logo-mark sa">🏢</div><div><div class="sb-logo-text">CivicNest</div><div class="sb-logo-sub">Society Admin</div></div></div>
+    <div class="sb-zone-pill zp-sa">🏢 Society Admin</div>
+    <div class="sb-user"><div class="sb-av av-sa">{{ user.avatar_initials }}</div><div><div class="sb-uname">{{ user.get_full_name|default:user.username }}</div><div class="sb-urole">Society Administrator</div></div></div>
+  </div>
+  <div class="sb-sec">Overview</div>
+  <a class="ni {% if active == 'dash' %}active-sa{% endif %}" href="/society-admin/"><span class="ni-icon">📊</span>Dashboard</a>
+  <a class="ni {% if active == 'community' %}active-sa{% endif %}" href="/society-admin/community/"><span class="ni-icon">🏘️</span>Community</a>
+  <a class="ni {% if active == 'users' %}active-sa{% endif %}" href="/society-admin/users/"><span class="ni-icon">👥</span>Residents</a>
+  <div class="sb-sec">Management</div>
+  <a class="ni {% if active == 'maint' %}active-sa{% endif %}" href="/society-admin/maintenance/"><span class="ni-icon">🔧</span>Maintenance</a>
+  <a class="ni {% if active == 'announce' %}active-sa{% endif %}" href="/society-admin/announcements/"><span class="ni-icon">📢</span>Announcements</a>
+  <a class="ni {% if active == 'verify' %}active-sa{% endif %}" href="/society-admin/verify/"><span class="ni-icon">✅</span>Verification</a>
+  <a class="ni {% if active == 'complaints' %}active-sa{% endif %}" href="/society-admin/complaints/"><span class="ni-icon">📝</span>Complaints</a>
+  <a class="ni {% if active == 'reports' %}active-sa{% endif %}" href="/society-admin/reports/"><span class="ni-icon">📈</span>Reports</a>
+  <div class="sb-foot"><a href="/accounts/logout/" class="sb-logout"><i class="fa fa-right-from-bracket"></i> Sign Out</a></div>
+</aside>

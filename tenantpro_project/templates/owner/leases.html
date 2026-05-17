@@ -1,0 +1,387 @@
+{% extends "base.html" %}
+{% block title %}Leases{% endblock %}
+{% block nav_owner %}active{% endblock %}
+
+{% block extra_css %}
+<style>
+/* ── Stats ─────────────────────────────── */
+.lease-stats{display:grid;grid-template-columns:repeat(4,1fr);gap:14px;margin-bottom:22px}
+.ls-card{background:#fff;border:1.5px solid #E8EDF5;border-radius:14px;padding:16px 18px;
+  display:flex;align-items:center;gap:14px;box-shadow:0 2px 10px rgba(61,107,229,.06)}
+.ls-icon{width:44px;height:44px;border-radius:12px;display:flex;align-items:center;
+  justify-content:center;font-size:20px;flex-shrink:0}
+.ls-val{font-size:22px;font-weight:800;color:#1A1F5E;font-family:monospace;line-height:1}
+.ls-lbl{font-size:11px;color:#8896B0;font-weight:700;letter-spacing:.4px;
+  text-transform:uppercase;margin-top:2px}
+
+/* ── Alert banners ──────────────────────── */
+.banner{border-radius:14px;padding:16px 20px;margin-bottom:20px;
+  display:flex;align-items:center;gap:14px}
+.banner-green{background:linear-gradient(135deg,#ECFDF5,#D1FAE5);border:1.5px solid #6EE7B7}
+.banner-amber{background:linear-gradient(135deg,#FFFBEB,#FEF3C7);border:1.5px solid #FCD34D}
+.banner-blue{background:linear-gradient(135deg,#EEF2FF,#E0E7FF);border:1.5px solid #C7D2FE}
+.banner-icon{font-size:28px;flex-shrink:0}
+.banner-title{font-weight:800;font-size:14px}
+.banner-sub{font-size:12px;margin-top:2px}
+.banner-green .banner-title{color:#065F46}.banner-green .banner-sub{color:#16A34A}
+.banner-amber .banner-title{color:#92400E}.banner-amber .banner-sub{color:#B45309}
+.banner-blue .banner-title{color:#1E40AF}.banner-blue .banner-sub{color:#3B82F6}
+
+/* ── Create Lease form ──────────────────── */
+.form-card{background:#fff;border:1.5px solid #E8EDF5;border-radius:16px;
+  padding:22px 24px;margin-bottom:22px;box-shadow:0 2px 12px rgba(61,107,229,.07)}
+.form-card-title{font-size:15px;font-weight:800;color:#1A1F5E;margin-bottom:18px;
+  display:flex;align-items:center;gap:8px}
+.form-ctrl{width:100%;padding:10px 13px;border:1.5px solid #E8EDF5;border-radius:10px;
+  font-size:13px;font-family:inherit;outline:none;transition:border .15s;box-sizing:border-box}
+.form-ctrl:focus{border-color:#3D6BE5;box-shadow:0 0 0 3px rgba(61,107,229,.1)}
+.form-ctrl:disabled{background:#F8FAFF;color:#94A3B8;cursor:not-allowed}
+.form-label{font-size:12px;font-weight:700;color:#374151;margin-bottom:5px;display:block}
+.rent-preview{background:#EEF2FF;border-radius:8px;padding:8px 12px;font-size:12px;
+  font-weight:700;color:#1A1F5E;margin-top:8px;display:none;
+  border-left:3px solid #3D6BE5}
+.unit-hint{font-size:11px;font-weight:700;margin-top:4px}
+.unit-hint.ok{color:#16A34A}.unit-hint.warn{color:#D97706}
+
+/* ── No-units helper box ───────────────── */
+.no-units-box{background:#FFFBEB;border:1.5px solid #FCD34D;border-radius:12px;
+  padding:20px 24px;text-align:center}
+.no-units-box h5{color:#92400E;font-weight:800;margin:0 0 6px}
+.no-units-box p{color:#B45309;font-size:13px;margin:0 0 14px}
+
+/* ── Table ──────────────────────────────── */
+.tp-table{width:100%;border-collapse:collapse}
+.tp-table th{padding:10px 14px;font-size:10px;font-weight:700;color:#8896B0;
+  text-transform:uppercase;letter-spacing:.6px;background:#F8FAFF;text-align:left;
+  border-bottom:1.5px solid #E8EDF5}
+.tp-table td{padding:13px 14px;font-size:13px;color:#374151;
+  border-bottom:1px solid #F1F5FD;vertical-align:middle}
+.tp-table tr:last-child td{border-bottom:none}
+.tp-table tr:hover td{background:#FAFCFF}
+.badge{display:inline-flex;align-items:center;gap:4px;padding:3px 10px;
+  border-radius:20px;font-size:11px;font-weight:700}
+.b-active{background:#ECFDF5;color:#065F46}
+.b-expired{background:#FEF2F2;color:#991B1B}
+.b-terminated{background:#F1F5F9;color:#475569}
+.b-pending{background:#FFFBEB;color:#92400E}
+.btn-danger-sm{padding:5px 12px;border-radius:8px;font-size:11px;font-weight:700;
+  cursor:pointer;border:1.5px solid #EF4444;background:#FEF2F2;color:#DC2626;transition:all .15s}
+.btn-danger-sm:hover{background:#EF4444;color:#fff}
+@media(max-width:768px){.lease-stats{grid-template-columns:repeat(2,1fr)}}
+</style>
+{% endblock %}
+
+{% block content %}
+{% with active="leases" %}
+<div class="shell">
+  {% include "partials/sidebar_owner.html" %}
+  <div class="main"><div class="panel fade-up">
+
+    <div class="pg-intro d-flex align-items-center justify-content-between flex-wrap gap-2" style="margin-bottom:20px">
+      <div><h2>📄 Lease Agreements</h2><p>Create and manage tenant leases for your units</p></div>
+      <button onclick="toggleForm()" class="btn-tp btn-primary btn-sm" id="toggleBtn">+ Create Lease</button>
+    </div>
+
+    <!-- ── Stats ── -->
+    <div class="lease-stats">
+      <div class="ls-card">
+        <div class="ls-icon" style="background:#EEF2FF">📄</div>
+        <div><div class="ls-val">{{ leases|length }}</div><div class="ls-lbl">Total Leases</div></div>
+      </div>
+      <div class="ls-card">
+        <div class="ls-icon" style="background:#ECFDF5">✅</div>
+        <div>
+          <div class="ls-val">{{ leases|length }}</div>
+          <div class="ls-lbl">Active</div>
+        </div>
+      </div>
+      <div class="ls-card">
+        <div class="ls-icon" style="background:#FFFBEB">🏠</div>
+        <div>
+          <div class="ls-val">{{ vacant_count|default:"0" }}</div>
+          <div class="ls-lbl">Vacant Units</div>
+        </div>
+      </div>
+      <div class="ls-card">
+        <div class="ls-icon" style="background:#F1F5F9">📊</div>
+        <div>
+          <div class="ls-val">{{ total_units|default:"0" }}</div>
+          <div class="ls-lbl">Total Units</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ── Status banner ── -->
+    {% if total_units == 0 %}
+    <div class="banner banner-amber">
+      <span class="banner-icon">⚠️</span>
+      <div>
+        <div class="banner-title">No units exist yet</div>
+        <div class="banner-sub">
+          Go to <a href="/owner/properties/" style="color:#92400E;font-weight:800;text-decoration:underline">My Properties</a>
+          → Add a property (units are auto-created) or click "Add Unit" on an existing property.
+        </div>
+      </div>
+    </div>
+    {% elif vacant_count == 0 %}
+    <div class="banner banner-amber">
+      <span class="banner-icon">🔒</span>
+      <div>
+        <div class="banner-title">All {{ total_units }} unit{{ total_units|pluralize }} are currently occupied</div>
+        <div class="banner-sub">Terminate an existing lease below to free a unit, or add new units in
+          <a href="/owner/properties/" style="color:#92400E;font-weight:800;text-decoration:underline">Properties</a>.
+        </div>
+      </div>
+    </div>
+    {% else %}
+    <div class="banner banner-green">
+      <span class="banner-icon">✅</span>
+      <div>
+        <div class="banner-title">{{ vacant_count }} vacant unit{{ vacant_count|pluralize }} ready for lease</div>
+        <div class="banner-sub">Click "+ Create Lease" to assign a tenant to a vacant unit.</div>
+      </div>
+    </div>
+    {% endif %}
+
+    <!-- ── Create Lease Form ── -->
+    <div id="new-lease" style="display:none" class="form-card">
+      <div class="form-card-title">📝 Create New Lease</div>
+
+      {% if vacant_count == 0 %}
+      <!-- No vacant units -->
+      <div class="no-units-box">
+        <div style="font-size:36px;margin-bottom:10px">🏠</div>
+        <h5>No vacant units available</h5>
+        <p>
+          {% if total_units == 0 %}
+            You haven't added any units yet. Go to Properties and add a property — units are created automatically.
+          {% else %}
+            All your {{ total_units }} unit{{ total_units|pluralize }} are occupied. Terminate a lease below to free a unit, or add more units to your properties.
+          {% endif %}
+        </p>
+        <a href="/owner/properties/" class="btn-tp btn-primary btn-sm">🏘 Go to My Properties</a>
+      </div>
+
+      {% else %}
+      <!-- Form -->
+      <form method="post" id="leaseForm">{% csrf_token %}
+        <input type="hidden" name="action" value="create_lease">
+        <div class="row g-3">
+
+          <!-- Unit selector -->
+          <div class="col-md-6">
+            <label class="form-label">Vacant Unit *</label>
+            <select name="unit_id" class="form-ctrl" required onchange="onUnitChange(this)">
+              <option value="">— Select a vacant unit —</option>
+              {% for u in units %}
+              <option value="{{ u.id }}"
+                data-rent="{{ u.monthly_rent }}"
+                data-deposit="{{ u.security_deposit }}"
+                data-prop="{{ u.property.name }}"
+                data-floor="{{ u.floor }}"
+                data-beds="{{ u.bedrooms }}">
+                {{ u.property.name }} · Unit {{ u.unit_number }}
+                {% if u.bedrooms %} ({{ u.bedrooms }}BHK){% endif %}
+                · ₹{{ u.monthly_rent }}/mo
+              </option>
+              {% empty %}
+              <option disabled value="">⚠ No vacant units found</option>
+              {% endfor %}
+            </select>
+            {% if units %}
+            <div class="unit-hint ok">✅ {{ vacant_count }} vacant unit{{ vacant_count|pluralize }} available</div>
+            {% else %}
+            <div class="unit-hint warn">⚠ No vacant units — all occupied or no units created yet</div>
+            {% endif %}
+            <div class="rent-preview" id="rentPreview"></div>
+          </div>
+
+          <!-- Tenant selector -->
+          <div class="col-md-6">
+            <label class="form-label">Tenant *</label>
+            <select name="tenant_id" class="form-ctrl" required>
+              <option value="">— Select tenant —</option>
+              {% for t in tenants %}
+              <option value="{{ t.id }}">
+                {{ t.get_full_name|default:t.username }}
+                {% if t.email %} · {{ t.email }}{% endif %}
+              </option>
+              {% empty %}
+              <option disabled value="">No tenant accounts registered yet</option>
+              {% endfor %}
+            </select>
+            {% if not tenants %}
+            <div class="unit-hint warn">⚠ No tenants yet — ask tenants to register at <a href="/accounts/register/">/register</a></div>
+            {% endif %}
+          </div>
+
+          <div class="col-md-3">
+            <label class="form-label">Start Date *</label>
+            <input type="date" name="start_date" class="form-ctrl" id="startDate" required>
+          </div>
+          <div class="col-md-3">
+            <label class="form-label">End Date *</label>
+            <input type="date" name="end_date" class="form-ctrl" id="endDate" required>
+          </div>
+          <div class="col-md-3">
+            <label class="form-label">Monthly Rent (₹) *</label>
+            <input type="number" name="monthly_rent" class="form-ctrl" id="rentInput"
+              placeholder="e.g. 12000" required min="1">
+          </div>
+          <div class="col-md-3">
+            <label class="form-label">Security Deposit (₹)</label>
+            <input type="number" name="security_deposit" class="form-ctrl" id="depositInput"
+              placeholder="e.g. 24000" min="0">
+          </div>
+        </div>
+
+        <div style="display:flex;gap:10px;margin-top:18px;flex-wrap:wrap">
+          <button type="submit" class="btn-tp btn-green">✅ Create Lease</button>
+          <button type="button" onclick="toggleForm()" class="btn-tp btn-ghost">Cancel</button>
+        </div>
+      </form>
+      {% endif %}
+    </div>
+
+    <!-- ── Leases Table ── -->
+    <div class="card">
+      <div style="padding:14px 18px;border-bottom:1.5px solid #E8EDF5;font-weight:800;
+        font-size:14px;color:#1A1F5E;display:flex;align-items:center;justify-content:space-between">
+        <span>📋 All Leases</span>
+        <span style="background:#F1F5F9;color:#64748B;font-size:11px;font-weight:700;
+          padding:3px 10px;border-radius:20px">{{ leases|length }} total</span>
+      </div>
+      <div style="overflow-x:auto">
+        <table class="tp-table">
+          <thead>
+            <tr>
+              <th>Tenant</th>
+              <th>Property / Unit</th>
+              <th>Monthly Rent</th>
+              <th>Period</th>
+              <th>Deposit</th>
+              <th>Status</th>
+              <th>Action</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for l in leases %}
+            <tr>
+              <td>
+                <div style="font-weight:700;color:#1A1F5E">{{ l.tenant.get_full_name|default:l.tenant.username }}</div>
+                <div style="font-size:11px;color:#8896B0">{{ l.tenant.email }}</div>
+              </td>
+              <td>
+                <div style="font-weight:600">{{ l.unit.property.name }}</div>
+                <div style="font-size:11px;color:#8896B0">
+                  Unit {{ l.unit.unit_number }}{% if l.unit.bedrooms %} · {{ l.unit.bedrooms }}BHK{% endif %}
+                  {% if l.unit.floor %} · Floor {{ l.unit.floor }}{% endif %}
+                </div>
+              </td>
+              <td style="font-family:monospace;font-weight:700;color:#1A1F5E">₹{{ l.monthly_rent }}</td>
+              <td style="font-size:12px;color:#64748B">
+                {{ l.start_date|date:"d M Y" }}<br>
+                <span style="color:#94A3B8">→</span> {{ l.end_date|date:"d M Y" }}
+                {% if l.months_remaining > 0 %}
+                <br><span style="font-size:10px;color:#22C55E;font-weight:700">{{ l.months_remaining }}mo left</span>
+                {% endif %}
+              </td>
+              <td style="font-family:monospace;font-size:12px">₹{{ l.security_deposit }}</td>
+              <td><span class="badge b-{{ l.status }}">{{ l.get_status_display }}</span></td>
+              <td>
+                {% if l.status == 'active' %}
+                <form method="post" style="display:inline"
+                  onsubmit="return confirm('⚠ Terminate this lease?\n\nUnit {{ l.unit.unit_number }} will become vacant again.')">
+                  {% csrf_token %}
+                  <input type="hidden" name="action" value="terminate_lease">
+                  <input type="hidden" name="lease_id" value="{{ l.id }}">
+                  <button type="submit" class="btn-danger-sm">🔚 Terminate</button>
+                </form>
+                {% else %}
+                <span style="color:#CBD5E1;font-size:12px">—</span>
+                {% endif %}
+              </td>
+            </tr>
+            {% empty %}
+            <tr>
+              <td colspan="7" style="text-align:center;padding:50px;color:#8896B0">
+                <div style="font-size:36px;margin-bottom:10px">📄</div>
+                <div style="font-weight:700;font-size:15px;margin-bottom:6px">No leases yet</div>
+                <div style="font-size:13px">Click "+ Create Lease" above to create your first lease</div>
+              </td>
+            </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+  </div></div>
+</div>
+{% endwith %}
+{% endblock %}
+
+{% block extra_js %}
+<script>
+function toggleForm() {
+  const f = document.getElementById('new-lease');
+  const open = f.style.display === 'none' || f.style.display === '';
+  f.style.display = open ? 'block' : 'none';
+  document.getElementById('toggleBtn').textContent = open ? '✕ Close' : '+ Create Lease';
+  if (open) f.scrollIntoView({ behavior: 'smooth', block: 'start' });
+}
+
+function onUnitChange(sel) {
+  const opt = sel.options[sel.selectedIndex];
+  const rent    = opt.dataset.rent    || '';
+  const deposit = opt.dataset.deposit || '';
+  const prop    = opt.dataset.prop    || '';
+  const beds    = opt.dataset.beds    || '';
+
+  const ri = document.getElementById('rentInput');
+  const di = document.getElementById('depositInput');
+  const preview = document.getElementById('rentPreview');
+
+  if (rent && sel.value) {
+    if (ri) ri.value = rent;
+    if (di) di.value = deposit;
+    if (preview) {
+      preview.style.display = 'block';
+      preview.innerHTML =
+        '🏠 <b>' + (prop || 'Unit') + '</b>' +
+        (beds ? ' · ' + beds + 'BHK' : '') +
+        ' · Rent: <b>₹' + parseInt(rent).toLocaleString('en-IN') + '</b>' +
+        (deposit && deposit !== '0' ? ' · Deposit: <b>₹' + parseInt(deposit).toLocaleString('en-IN') + '</b>' : '');
+    }
+  } else {
+    if (ri) ri.value = '';
+    if (di) di.value = '';
+    if (preview) preview.style.display = 'none';
+  }
+}
+
+// Date helpers
+document.addEventListener('DOMContentLoaded', function () {
+  const sd = document.getElementById('startDate');
+  const ed = document.getElementById('endDate');
+  if (!sd || !ed) return;
+
+  // Default: today → 1 year from today
+  const today = new Date();
+  const nextYear = new Date(today);
+  nextYear.setFullYear(nextYear.getFullYear() + 1);
+  sd.min = today.toISOString().split('T')[0];
+  sd.value = today.toISOString().split('T')[0];
+  ed.value = nextYear.toISOString().split('T')[0];
+
+  sd.addEventListener('change', function () {
+    ed.min = sd.value;
+    if (ed.value && ed.value <= sd.value) {
+      const d = new Date(sd.value);
+      d.setFullYear(d.getFullYear() + 1);
+      ed.value = d.toISOString().split('T')[0];
+    }
+  });
+});
+</script>
+{% endblock %}

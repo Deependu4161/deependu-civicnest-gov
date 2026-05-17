@@ -1,0 +1,60 @@
+{% extends "base.html" %}
+{% block title %}Complaints{% endblock %}
+{% block nav_sa %}active{% endblock %}
+{% block content %}
+<div class="shell">
+  {% with active="complaints" %}{% include "partials/sidebar_sa.html" %}{% endwith %}
+  <div class="main"><div class="panel fade-up">
+    <div class="pg-intro"><h2>📝 Community Complaints</h2><p>Complaints from residents in your managed properties</p></div>
+    <div class="row g-3 mb-4">
+      <div class="col-md-3"><div class="sc c-navy"><div class="sc-icon" style="background:var(--n100);font-size:20px;">📋</div><div class="sc-lbl">Total</div><div class="sc-val">{{ stats.total }}</div></div></div>
+      <div class="col-md-3"><div class="sc c-amber"><div class="sc-icon" style="background:var(--a50);font-size:20px;">🔴</div><div class="sc-lbl">Open</div><div class="sc-val">{{ stats.open }}</div></div></div>
+      <div class="col-md-3"><div class="sc c-blue"><div class="sc-icon" style="background:var(--blue-l);font-size:20px;">🔄</div><div class="sc-lbl">Under Review</div><div class="sc-val">{{ stats.under_review }}</div></div></div>
+      <div class="col-md-3"><div class="sc c-green"><div class="sc-icon" style="background:var(--green-l);font-size:20px;">✅</div><div class="sc-lbl">Resolved</div><div class="sc-val">{{ stats.resolved }}</div></div></div>
+    </div>
+    {% if complaints %}
+    {% for c in complaints %}
+    <div class="card mb-3" style="border-left:4px solid {% if c.status == 'open' %}#EF4444{% elif c.status == 'under_review' %}#F59E0B{% elif c.status == 'resolved' %}#22C55E{% else %}#94A3B8{% endif %};">
+      <div style="padding:18px 22px;">
+        <div class="d-flex justify-content-between align-items-start flex-wrap gap-2 mb-2">
+          <div>
+            <span style="font-size:16px;font-weight:800;color:var(--g900);">{{ c.title }}</span>
+            <div style="font-size:12px;color:var(--g300);margin-top:3px;">
+              By <strong>{{ c.tenant.get_full_name|default:c.tenant.username }}</strong> · {{ c.unit.property.name }} — Unit {{ c.unit.unit_number }} · {{ c.created_at|date:"d M Y" }}
+            </div>
+          </div>
+          <span class="badge b-{{ c.status }}">{{ c.get_status_display }}</span>
+        </div>
+        <p style="font-size:13.5px;color:var(--g500);margin:0 0 12px;">{{ c.description }}</p>
+        {% if c.response %}<div style="background:#F0FDF4;border:1px solid #86EFAC;border-radius:8px;padding:10px 14px;font-size:13px;color:#166534;margin-bottom:12px;"><strong>Response:</strong> {{ c.response }}</div>{% endif %}
+        <form method="post" style="display:flex;gap:10px;flex-wrap:wrap;align-items:flex-end;">
+          {% csrf_token %}
+          <input type="hidden" name="complaint_id" value="{{ c.id }}">
+          <div>
+            <label style="font-size:11px;font-weight:700;color:var(--g300);display:block;margin-bottom:4px;">Update Status</label>
+            <select name="status" class="form-ctrl" style="width:160px;">
+              <option value="open" {% if c.status == 'open' %}selected{% endif %}>Open</option>
+              <option value="under_review" {% if c.status == 'under_review' %}selected{% endif %}>Under Review</option>
+              <option value="resolved" {% if c.status == 'resolved' %}selected{% endif %}>Resolved</option>
+              <option value="closed" {% if c.status == 'closed' %}selected{% endif %}>Closed</option>
+            </select>
+          </div>
+          <div style="flex:1;min-width:200px;">
+            <label style="font-size:11px;font-weight:700;color:var(--g300);display:block;margin-bottom:4px;">Add Response</label>
+            <input type="text" name="response" class="form-ctrl" placeholder="Response to resident..." value="{{ c.response }}">
+          </div>
+          <button type="submit" class="btn-tp btn-green">Update</button>
+        </form>
+      </div>
+    </div>
+    {% endfor %}
+    {% else %}
+    <div class="card" style="text-align:center;padding:60px;color:var(--g300);">
+      <div style="font-size:48px;margin-bottom:12px;">🎉</div>
+      <div style="font-size:16px;font-weight:700;">No complaints!</div>
+      <div style="font-size:13px;margin-top:4px;">All residents are satisfied.</div>
+    </div>
+    {% endif %}
+  </div></div>
+</div>
+{% endblock %}

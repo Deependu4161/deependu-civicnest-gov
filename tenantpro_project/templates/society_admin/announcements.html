@@ -1,0 +1,31 @@
+{% extends "base.html" %}
+{% block title %}Announcements{% endblock %}
+{% block nav_sa %}active{% endblock %}
+{% block content %}
+<div class="shell">
+  {% with active="announce" %}{% include "partials/sidebar_sa.html" %}{% endwith %}
+  <div class="main"><div class="panel fade-up">
+    <div class="pg-intro"><h2>Announcements</h2><p>Publish notices for your community</p></div>
+    <div class="card mb-3">
+      <div class="cd-hd"><span class="cd-title">Publish Announcement</span></div>
+      <form method="post">{% csrf_token %}
+        <div class="row g-3">
+          <div class="col-md-8"><label class="form-label">Title</label><input type="text" name="title" class="form-ctrl" required></div>
+          <div class="col-md-4"><label class="form-label">Property</label><select name="property" class="form-ctrl"><option value="">All Properties</option>{% for p in props %}<option value="{{ p.id }}">{{ p.name }}</option>{% endfor %}</select></div>
+          <div class="col-12"><label class="form-label">Message</label><textarea name="message" class="form-ctrl" required></textarea></div>
+          <div class="col-12"><label style="display:flex;align-items:center;gap:8px;cursor:pointer;font-size:13.5px;"><input type="checkbox" name="is_pinned"> 📌 Pin this announcement</label></div>
+        </div>
+        <button type="submit" class="btn-tp btn-amber mt-3">Publish</button>
+      </form>
+    </div>
+    <div class="card">
+      {% for a in announcements %}<div style="padding:16px;border-bottom:1px solid var(--g50);">
+        <div style="font-weight:800;color:var(--g900);">{% if a.is_pinned %}📌 {% endif %}{{ a.title }}</div>
+        <div style="font-size:13px;color:var(--g500);margin-top:4px;">{{ a.message|truncatechars:120 }}</div>
+        <div style="font-size:11.5px;color:var(--g300);margin-top:6px;">{{ a.created_at|date:"d M Y" }} · {{ a.get_audience_display }}</div>
+      </div>
+      {% empty %}<div style="text-align:center;padding:40px;color:var(--g300);">No announcements published yet</div>{% endfor %}
+    </div>
+  </div></div>
+</div>
+{% endblock %}

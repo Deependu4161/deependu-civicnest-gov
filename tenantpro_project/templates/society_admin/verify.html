@@ -1,0 +1,19 @@
+{% extends "base.html" %}
+{% block title %}Verification{% endblock %}
+{% block nav_sa %}active{% endblock %}
+{% block content %}
+<div class="shell">
+  {% with active="verify" %}{% include "partials/sidebar_sa.html" %}{% endwith %}
+  <div class="main"><div class="panel fade-up">
+    <div class="pg-intro"><h2>Verification Queue</h2></div>
+    <div class="card">
+      {% if name == "announcements" %}{% endif %}
+      <div style="text-align:center;padding:60px;color:var(--g400);">
+        <div style="font-size:40px;margin-bottom:12px;">🏢</div>
+        <div style="font-weight:700;">Verification Queue content loads here</div>
+        <div style="font-size:13px;margin-top:8px;">Data pulled from your managed properties</div>
+      </div>
+    </div>
+  </div></div>
+</div>
+{% endblock %}

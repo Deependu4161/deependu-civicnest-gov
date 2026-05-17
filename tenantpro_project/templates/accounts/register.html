@@ -1,0 +1,48 @@
+{% extends "base.html" %}
+{% block title %}Create Account{% endblock %}
+{% block content %}
+<div style="min-height:calc(100vh - 54px);display:flex;align-items:center;justify-content:center;padding:40px 20px;background:linear-gradient(135deg,var(--n900),#091322);">
+  <div style="width:100%;max-width:480px;">
+    <div style="background:rgba(255,255,255,.03);border:1px solid rgba(167,139,250,.15);border-radius:20px;overflow:hidden;box-shadow:0 24px 80px rgba(0,0,0,.4);">
+      <div style="padding:28px 32px 20px;border-bottom:1px solid rgba(255,255,255,.06);text-align:center;">
+        <div style="font-size:22px;font-weight:800;color:#fff;margin-bottom:4px;">Create Account</div>
+        <div style="font-size:13px;color:rgba(255,255,255,.4);">Join TenantPro — choose your role</div>
+      </div>
+      <div style="padding:24px 32px;">
+        <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;margin-bottom:20px;" id="role-cards">
+          <label id="lbl-tenant" style="border:1.5px solid var(--n400);background:rgba(109,40,217,.15);border-radius:10px;padding:12px 8px;cursor:pointer;text-align:center;">
+            <input type="radio" name="role_pick" value="tenant" hidden checked><div style="font-size:22px;margin-bottom:4px;">🏡</div>
+            <div style="font-size:12px;font-weight:800;color:#fff;">Tenant</div></label>
+          <label id="lbl-owner" style="border:1.5px solid rgba(255,255,255,.1);background:rgba(255,255,255,.03);border-radius:10px;padding:12px 8px;cursor:pointer;text-align:center;">
+            <input type="radio" name="role_pick" value="owner" hidden><div style="font-size:22px;margin-bottom:4px;">🏘️</div>
+            <div style="font-size:12px;font-weight:800;color:rgba(255,255,255,.5);">Owner</div></label>
+          <label id="lbl-sa" style="border:1.5px solid rgba(255,255,255,.1);background:rgba(255,255,255,.03);border-radius:10px;padding:12px 8px;cursor:pointer;text-align:center;">
+            <input type="radio" name="role_pick" value="society_admin" hidden><div style="font-size:22px;margin-bottom:4px;">🏢</div>
+            <div style="font-size:12px;font-weight:800;color:rgba(255,255,255,.5);">Society</div></label>
+        </div>
+        <form method="post">{% csrf_token %}
+          <input type="hidden" name="role" id="role-field" value="tenant">
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:10px;">
+            <div><label class="form-label" style="color:rgba(255,255,255,.5);">First Name</label><input type="text" name="first_name" class="form-ctrl" placeholder="Deependu" required style="background:rgba(255,255,255,.06);border-color:rgba(255,255,255,.1);color:#fff;"></div>
+            <div><label class="form-label" style="color:rgba(255,255,255,.5);">Last Name</label><input type="text" name="last_name" class="form-ctrl" placeholder="Singh" style="background:rgba(255,255,255,.06);border-color:rgba(255,255,255,.1);color:#fff;"></div>
+          </div>
+          <div class="form-group"><label class="form-label" style="color:rgba(255,255,255,.5);">Username</label><input type="text" name="username" class="form-ctrl" placeholder="Deependu_Pratap" required style="background:rgba(255,255,255,.06);border-color:rgba(255,255,255,.1);color:#fff;"></div>
+          <div class="form-group"><label class="form-label" style="color:rgba(255,255,255,.5);">Email</label><input type="email" name="email" class="form-ctrl" placeholder="deependu@email.com" required style="background:rgba(255,255,255,.06);border-color:rgba(255,255,255,.1);color:#fff;"></div>
+          <div class="form-group"><label class="form-label" style="color:rgba(255,255,255,.5);">Phone</label><input type="text" name="phone" class="form-ctrl" placeholder="+91 98765 41210" style="background:rgba(255,255,255,.06);border-color:rgba(255,255,255,.1);color:#fff;"></div>
+          <div class="form-group"><label class="form-label" style="color:rgba(255,255,255,.5);">Password</label><input type="password" name="password" class="form-ctrl" placeholder="Strong password" required style="background:rgba(255,255,255,.06);border-color:rgba(255,255,255,.1);color:#fff;"></div>
+          <button type="submit" class="btn-tp btn-primary w-100 justify-content-center" style="font-size:14.5px;padding:12px;">Create Account</button>
+        </form>
+        <div style="text-align:center;margin-top:14px;font-size:13px;color:rgba(255,255,255,.35);">Already a member? <a href="/accounts/login/" style="color:var(--n300);font-weight:700;">Sign in</a></div>
+      </div>
+    </div>
+  </div>
+</div>
+<style>.form-ctrl::placeholder{color:rgba(255,255,255,.25)!important;}.form-ctrl:focus{background:rgba(255,255,255,.09)!important;border-color:var(--n400)!important;}</style>
+<script>
+const roles={tenant:{lbl:"lbl-tenant",c:"rgba(109,40,217,.15)",bc:"var(--n400)",tc:"#fff"},owner:{lbl:"lbl-owner",c:"rgba(5,150,105,.15)",bc:"var(--green)",tc:"#fff"},society_admin:{lbl:"lbl-sa",c:"rgba(6,182,212,.15)",bc:"var(--cyan)",tc:"#fff"}};
+document.querySelectorAll("input[name=role_pick]").forEach(r=>r.addEventListener("change",()=>{
+  document.getElementById("role-field").value=r.value;
+  Object.keys(roles).forEach(k=>{const l=document.getElementById(roles[k].lbl);if(k===r.value){l.style.border=`1.5px solid ${roles[k].bc}`;l.style.background=roles[k].c;l.querySelector("div:last-child").style.color=roles[k].tc;}else{l.style.border="1.5px solid rgba(255,255,255,.1)";l.style.background="rgba(255,255,255,.03)";l.querySelector("div:last-child").style.color="rgba(255,255,255,.5)";}});
+}));
+</script>
+{% endblock %}

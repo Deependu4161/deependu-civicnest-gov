@@ -1,0 +1,37 @@
+{% extends "base.html" %}
+{% block title %}Complaints{% endblock %}
+{% block nav_tenant %}active{% endblock %}
+{% block content %}
+{% with active="complaints" lease=None %}
+<div class="shell">
+  {% include "partials/sidebar_tenant.html" %}
+  <div class="main"><div class="panel fade-up">
+    <div class="pg-intro d-flex align-items-center justify-content-between flex-wrap gap-2">
+      <div><h2>Complaints</h2><p>File and track complaints</p></div>
+      <button onclick="document.getElementById('new-c').style.display=document.getElementById('new-c').style.display=='none'?'block':'none'" class="btn-tp btn-primary btn-sm">+ File Complaint</button>
+    </div>
+    <div id="new-c" style="display:none;" class="card mb-3">
+      <div class="cd-hd"><span class="cd-title">New Complaint</span></div>
+      <form method="post">{% csrf_token %}
+        <div class="form-group"><label class="form-label">Title</label><input type="text" name="title" class="form-ctrl" placeholder="Brief complaint title" required></div>
+        <div class="form-group"><label class="form-label">Description</label><textarea name="description" class="form-ctrl" placeholder="Describe your complaint in detail…" required></textarea></div>
+        <button type="submit" class="btn-tp btn-amber">Submit Complaint</button>
+      </form>
+    </div>
+    <div class="card">
+      {% for c in complaints %}
+      <div style="padding:16px;border-bottom:1px solid var(--g50);">
+        <div style="display:flex;align-items:flex-start;justify-content:space-between;gap:12px;flex-wrap:wrap;">
+          <div><div style="font-weight:800;color:var(--g900);margin-bottom:4px;">{{ c.title }}</div>
+          <div style="font-size:13px;color:var(--g500);">{{ c.description|truncatechars:120 }}</div>
+          {% if c.response %}<div style="background:var(--green-l);border-radius:var(--r);padding:8px 12px;margin-top:8px;font-size:12.5px;color:var(--green);">📣 Response: {{ c.response }}</div>{% endif %}</div>
+          <div style="text-align:right;flex-shrink:0;"><span class="badge {% if c.status == 'resolved' %}b-paid{% elif c.status == 'open' %}b-overdue{% else %}b-progress{% endif %}">{{ c.get_status_display }}</span>
+          <div style="font-size:11.5px;color:var(--g300);margin-top:4px;">{{ c.created_at|date:"d M Y" }}</div></div>
+        </div>
+      </div>
+      {% empty %}<div style="text-align:center;padding:40px;color:var(--g300);">No complaints filed yet.</div>{% endfor %}
+    </div>
+  </div></div>
+</div>
+{% endwith %}
+{% endblock %}

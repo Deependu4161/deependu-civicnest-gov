@@ -1,0 +1,32 @@
+<aside class="sidebar" id="tp-sidebar">
+  <div class="sb-head">
+    <div class="sb-logo"><div class="sb-logo-mark ten">🏡</div><div><div class="sb-logo-text">CivicNest</div><div class="sb-logo-sub">Tenant Portal</div></div></div>
+    <div class="sb-zone-pill zp-ten">🏡 Tenant Zone</div>
+    <div class="sb-user"><div class="sb-av av-ten">{{ user.avatar_initials }}</div><div><div class="sb-uname">{{ user.get_full_name|default:user.username }}</div><div class="sb-urole">{% if lease %}{{ lease.unit }} · {{ lease.unit.property.city }}{% else %}Tenant{% endif %}</div></div></div>
+  </div>
+  <div class="sb-sec">My Home</div>
+  <a class="ni {% if active == 'dash' %}active-ten{% endif %}" href="/tenant/"><span class="ni-icon">📊</span>Dashboard</a>
+  <a class="ni {% if active == 'rent' %}active-ten{% endif %}" href="/tenant/rent/"><span class="ni-icon">💰</span>My Rent</a>
+  <a class="ni {% if active == 'maint' %}active-ten{% endif %}" href="/tenant/maintenance/"><span class="ni-icon">🔧</span>Maintenance</a>
+  <a class="ni {% if active == 'complaints' %}active-ten{% endif %}" href="/tenant/complaints/"><span class="ni-icon">📣</span>Complaints</a>
+  <a class="ni {% if active == 'lease' %}active-ten{% endif %}" href="/tenant/lease/"><span class="ni-icon">📄</span>My Lease</a>
+  <a class="ni {% if active == 'history' %}active-ten{% endif %}" href="/tenant/history/"><span class="ni-icon">📜</span>Payment History</a>
+  <a class="ni {% if active == 'notifs' %}active-ten{% endif %}" href="/tenant/notifications/" style="position:relative">
+    <span class="ni-icon">🔔</span>Notifications
+    <span id="sb-notif-count" style="margin-left:auto;background:#EF4444;color:#fff;border-radius:20px;padding:1px 7px;font-size:10px;font-weight:800;display:none"></span>
+  </a>
+  <a class="ni {% if active == 'chat' %}active-ten{% endif %}" href="/tenant/messages/"><span class="ni-icon">💬</span>Messages</a>
+  <a class="ni {% if active == 'profile' %}active-ten{% endif %}" href="/tenant/profile/"><span class="ni-icon">👤</span>Profile</a>
+  <div class="sb-foot"><a href="/accounts/logout/" class="sb-logout"><i class="fa fa-right-from-bracket"></i> Sign Out</a></div>
+</aside>
+<script>
+// Update sidebar notification badge
+(async function(){
+  try{
+    const r=await fetch('/api/notif/count/');
+    const d=await r.json();
+    const b=document.getElementById('sb-notif-count');
+    if(b&&d.count>0){b.textContent=d.count;b.style.display='inline';}
+  }catch(e){}
+})();
+</script>

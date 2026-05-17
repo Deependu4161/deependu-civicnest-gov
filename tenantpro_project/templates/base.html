@@ -1,0 +1,268 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>{% block title %}CivicNest{% endblock %} — CivicNest</title>
+<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+{% load static %}<link rel="stylesheet" href="{% static 'css/tenantpro.css' %}">
+<style>
+/* ── Notification Dropdown ── */
+.tp-notif-wrap{position:relative}
+.tp-notif-btn{position:relative;cursor:pointer;padding:6px 10px;border-radius:8px;transition:background .15s;border:none;background:transparent;color:inherit}
+.tp-notif-btn:hover{background:rgba(255,255,255,.12)}
+.tp-notif-badge{position:absolute;top:1px;right:3px;min-width:17px;height:17px;border-radius:9px;
+  background:#EF4444;color:#fff;font-size:10px;font-weight:800;display:flex;align-items:center;
+  justify-content:center;padding:0 4px;border:2px solid #fff;line-height:1;display:none}
+.tp-notif-badge.show{display:flex}
+.tp-notif-drop{position:absolute;top:calc(100% + 10px);right:0;width:340px;background:#fff;
+  border-radius:16px;box-shadow:0 20px 60px rgba(10,15,50,.18);z-index:9999;
+  transform:translateY(-8px) scale(.96);opacity:0;pointer-events:none;transition:all .22s cubic-bezier(.34,1.56,.64,1)}
+.tp-notif-drop.open{transform:translateY(0) scale(1);opacity:1;pointer-events:all}
+.tp-nd-hd{padding:14px 18px;display:flex;align-items:center;justify-content:space-between;
+  border-bottom:1px solid #F1F5F9}
+.tp-nd-title{font-size:14px;font-weight:800;color:#1A1F5E}
+.tp-nd-mark{font-size:11px;font-weight:700;color:#3D6BE5;cursor:pointer;border:none;background:none;
+  padding:4px 10px;border-radius:6px;transition:background .15s}
+.tp-nd-mark:hover{background:#EEF2FF}
+.tp-nd-list{max-height:340px;overflow-y:auto}
+.tp-nd-item{padding:12px 18px;border-bottom:1px solid #F8FAFF;cursor:pointer;transition:background .15s;display:flex;align-items:flex-start;gap:12px}
+.tp-nd-item:hover{background:#F8FAFF}
+.tp-nd-item.unread{background:#FAFBFF;border-left:3px solid #3D6BE5}
+.tp-nd-icon{width:34px;height:34px;border-radius:9px;display:flex;align-items:center;justify-content:center;font-size:15px;flex-shrink:0}
+.tp-nd-icon.success{background:#ECFDF5}.tp-nd-icon.warning{background:#FFFBEB}
+.tp-nd-icon.error{background:#FEF2F2}.tp-nd-icon.info{background:#EEF2FF}
+.tp-nd-txt{flex:1;min-width:0}
+.tp-nd-ttl{font-size:12.5px;font-weight:700;color:#1A1F5E;margin-bottom:2px;
+  white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.tp-nd-msg{font-size:11.5px;color:#64748B;line-height:1.4;display:-webkit-box;
+  -webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
+.tp-nd-time{font-size:10px;color:#94A3B8;margin-top:4px;white-space:nowrap}
+.tp-nd-dot{width:7px;height:7px;border-radius:50%;background:#3D6BE5;flex-shrink:0;margin-top:5px}
+.tp-nd-empty{padding:30px;text-align:center;color:#94A3B8;font-size:13px}
+.tp-nd-footer{padding:12px 18px;border-top:1px solid #F1F5F9;text-align:center}
+.tp-nd-all{font-size:12px;font-weight:700;color:#3D6BE5;text-decoration:none}
+.tp-nd-all:hover{text-decoration:underline}
+</style>
+{% block extra_css %}{% endblock %}
+</head>
+<body>
+
+<!-- TOPBAR -->
+<nav class="tp-navbar">
+  <div class="tp-navbar-inner">
+    <a href="/" class="tp-brand">
+      <div class="tp-brand-mark">🏠</div>
+      <span class="tp-brand-name">Civic<span>Nest</span></span>
+    </a>
+    <div class="tp-nav-links" id="tp-nav-links">
+      <a class="tp-nav-link" href="/">Home</a>
+      {% if user.is_authenticated %}
+        {% if user.role == 'admin' or user.is_staff %}<a class="tp-nav-link {% block nav_admin %}{% endblock %}" href="/admin-zone/">System Admin</a>{% endif %}
+        {% if user.role == 'owner' %}<a class="tp-nav-link {% block nav_owner %}{% endblock %}" href="/owner/">Property Owner</a>{% endif %}
+        {% if user.role == 'tenant' %}<a class="tp-nav-link {% block nav_tenant %}{% endblock %}" href="/tenant/">Tenant</a>{% endif %}
+        {% if user.role == 'society_admin' %}<a class="tp-nav-link {% block nav_sa %}{% endblock %}" href="/society-admin/">Society&nbsp;Admin</a>{% endif %}
+      {% else %}
+        <a class="tp-nav-link" href="/accounts/login/">Login</a>
+        <a class="tp-nav-link" href="/accounts/register/">Register</a>
+      {% endif %}
+    </div>
+    <div class="tp-nav-right">
+      {% if user.is_authenticated %}
+        {% if user.role == 'admin' or user.is_staff %}<span class="tp-badge tb-adm">⚙ System Admin</span>{% endif %}
+        {% if user.role == 'owner' %}<span class="tp-badge tb-own">🏘 Property Owner</span>{% endif %}
+        {% if user.role == 'tenant' %}<span class="tp-badge tb-ten">🏡 Tenant</span>{% endif %}
+        {% if user.role == 'society_admin' %}<span class="tp-badge tb-sa">🏢 Society</span>{% endif %}
+
+        <!-- Notification Bell with Dropdown -->
+        <div class="tp-notif-wrap" id="notifWrap">
+          <button class="tp-notif-btn" id="notifBtn" onclick="toggleNotifDrop()" title="Notifications">
+            <i class="fa fa-bell" style="font-size:16px"></i>
+            <span class="tp-notif-badge" id="notifBadge"></span>
+          </button>
+          <div class="tp-notif-drop" id="notifDrop">
+            <div class="tp-nd-hd">
+              <span class="tp-nd-title">🔔 Notifications</span>
+              <button class="tp-nd-mark" onclick="markAllRead()">Mark all read</button>
+            </div>
+            <div class="tp-nd-list" id="notifList">
+              <div class="tp-nd-empty">Loading…</div>
+            </div>
+            <div class="tp-nd-footer">
+              <a href="{% if user.role == 'tenant' %}/tenant/notifications/{% else %}#{% endif %}" class="tp-nd-all">View all notifications →</a>
+            </div>
+          </div>
+        </div>
+
+        <a href="/accounts/logout/" class="tp-nav-icon" title="Logout"><i class="fa fa-right-from-bracket"></i></a>
+      {% endif %}
+      <button class="tp-nav-mob-btn" id="tp-nav-mob-btn"><i class="fa fa-bars"></i></button>
+    </div>
+  </div>
+  <div class="tp-mob-menu" id="tp-mob-menu">
+    <a class="tp-mob-link" href="/">Home</a>
+    {% if user.is_authenticated %}
+      {% if user.role == 'admin' or user.is_staff %}<a class="tp-mob-link" href="/admin-zone/">System Admin</a>{% endif %}
+      {% if user.role == 'owner' %}<a class="tp-mob-link" href="/owner/">Property Owner</a>{% endif %}
+      {% if user.role == 'tenant' %}<a class="tp-mob-link" href="/tenant/">Tenant</a>{% endif %}
+      {% if user.role == 'society_admin' %}<a class="tp-mob-link" href="/society-admin/">Society Admin</a>{% endif %}
+      <a class="tp-mob-link" href="/accounts/logout/">Logout</a>
+    {% else %}
+      <a class="tp-mob-link" href="/accounts/login/">Login</a>
+      <a class="tp-mob-link" href="/accounts/register/">Register</a>
+    {% endif %}
+  </div>
+</nav>
+<div class="tp-overlay" id="tp-overlay"></div>
+
+{% if messages %}
+<div style="max-width:1200px;margin:70px auto 0;padding:10px 20px 0;" id="flash-msgs">
+  {% for msg in messages %}
+  <div class="alert alert-{{ msg.tags|default:'info' }}">
+    <i class="fa fa-{% if msg.tags == 'success' %}circle-check{% elif msg.tags == 'error' %}circle-xmark{% else %}circle-info{% endif %}"></i>
+    {{ msg }}
+  </div>
+  {% endfor %}
+</div>
+{% endif %}
+
+{% block content %}{% endblock %}
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+<script>
+// ── Mobile sidebar/nav ───────────────────────────────
+const mobBtn=document.getElementById('tp-nav-mob-btn');
+const mobMenu=document.getElementById('tp-mob-menu');
+const overlay=document.getElementById('tp-overlay');
+const sidebar=document.getElementById('tp-sidebar');
+if(mobBtn)mobBtn.addEventListener('click',()=>{mobMenu.style.display=mobMenu.style.display==='flex'?'none':'flex';});
+if(overlay)overlay.addEventListener('click',()=>{if(sidebar)sidebar.classList.remove('open');overlay.style.display='none';});
+const toggle=document.getElementById('tp-toggle');
+if(toggle)toggle.addEventListener('click',()=>{sidebar&&sidebar.classList.toggle('open');overlay&&(overlay.style.display=sidebar.classList.contains('open')?'block':'none');});
+// Auto-dismiss alerts
+setTimeout(()=>{const m=document.getElementById('flash-msgs');if(m){m.style.transition='opacity .5s';m.style.opacity='0';setTimeout(()=>m.remove(),500);}},4000);
+
+// ── Notification Dropdown ─────────────────────────────
+{% if user.is_authenticated %}
+let notifOpen=false;
+const CSRF=document.cookie.split(';').reduce((v,c)=>{const[k,val]=c.trim().split('=');return k==='csrftoken'?decodeURIComponent(val):v;},'');
+
+function getCsrf(){return document.cookie.split(';').reduce((v,c)=>{const[k,val]=c.trim().split('=');return k.trim()==='csrftoken'?decodeURIComponent(val):v;},'');}
+
+function toggleNotifDrop(){
+  const drop=document.getElementById('notifDrop');
+  notifOpen=!notifOpen;
+  if(notifOpen){drop.classList.add('open');loadNotifDropdown();}
+  else{drop.classList.remove('open');}
+}
+
+document.addEventListener('click',function(e){
+  const wrap=document.getElementById('notifWrap');
+  if(wrap&&!wrap.contains(e.target)){
+    document.getElementById('notifDrop').classList.remove('open');
+    notifOpen=false;
+  }
+});
+
+function notifIcon(type){
+  const icons={success:'✅',warning:'⚠️',error:'❌',info:'📢'};
+  return icons[type]||'📢';
+}
+
+async function loadNotifDropdown(){
+  try{
+    const r=await fetch('/api/notif/dropdown/');
+    const d=await r.json();
+    const list=document.getElementById('notifList');
+    if(!d.notifications.length){list.innerHTML='<div class="tp-nd-empty">🔔<br>No notifications yet</div>';return;}
+    list.innerHTML=d.notifications.map(n=>`
+      <div class="tp-nd-item ${n.is_read?'':'unread'}" onclick="markOne(${n.id},this)">
+        <div class="tp-nd-icon ${n.type}">${notifIcon(n.type)}</div>
+        <div class="tp-nd-txt">
+          <div class="tp-nd-ttl">${n.title}</div>
+          <div class="tp-nd-msg">${n.message}</div>
+          <div class="tp-nd-time">${n.time}</div>
+        </div>
+        ${n.is_read?'':'<div class="tp-nd-dot"></div>'}
+      </div>`).join('');
+  }catch(e){console.error(e);}
+}
+
+async function markOne(id,el){
+  await fetch(`/api/notif/mark/${id}/`,{method:'POST',headers:{'X-CSRFToken':getCsrf()}});
+  el.classList.remove('unread');const dot=el.querySelector('.tp-nd-dot');if(dot)dot.remove();
+  updateBadge();
+}
+
+async function markAllRead(){
+  await fetch('/api/notif/mark-all/',{method:'POST',headers:{'X-CSRFToken':getCsrf()}});
+  document.querySelectorAll('.tp-nd-item').forEach(el=>{el.classList.remove('unread');const d=el.querySelector('.tp-nd-dot');if(d)d.remove();});
+  const b=document.getElementById('notifBadge');if(b){b.textContent='0';b.classList.remove('show');}
+}
+
+async function updateBadge(){
+  try{
+    const r=await fetch('/api/notif/count/');
+    const d=await r.json();
+    const b=document.getElementById('notifBadge');
+    if(b){if(d.count>0){b.textContent=d.count>99?'99+':d.count;b.classList.add('show');}else{b.classList.remove('show');}}
+  }catch(e){}
+}
+
+// Poll every 30s
+updateBadge();
+setInterval(updateBadge,30000);
+{% endif %}
+</script>
+
+<!-- 🤖 CivicNest AI Assistant (available on all pages) -->
+<div id="cn-chat-icon" onclick="cnToggleChat()" title="CivicNest Help" style="position:fixed;bottom:24px;right:24px;width:56px;height:56px;background:linear-gradient(135deg,#1A1F5E,#3D6BE5);color:#fff;border-radius:50%;display:flex;justify-content:center;align-items:center;font-size:24px;cursor:pointer;z-index:9998;box-shadow:0 8px 24px rgba(61,107,229,.4);transition:transform .2s;" onmouseover="this.style.transform='scale(1.1)'" onmouseout="this.style.transform='scale(1)'">🤖</div>
+
+<div id="cn-chatbox" style="position:fixed;bottom:92px;right:24px;width:360px;height:480px;background:#0f172a;border-radius:20px;display:none;flex-direction:column;z-index:9998;box-shadow:0 16px 48px rgba(0,0,0,.5);border:1px solid rgba(255,255,255,.1);overflow:hidden;">
+  <div style="padding:14px 16px;background:linear-gradient(135deg,#1A1F5E,#3D6BE5);color:#fff;display:flex;align-items:center;justify-content:space-between;">
+    <div style="display:flex;align-items:center;gap:10px;">
+      <span style="font-size:20px;">🤖</span>
+      <div>
+        <div style="font-weight:800;font-size:14px;">CivicNest Assistant</div>
+        <div style="font-size:10px;opacity:.75;">Ask about rent, complaints, maintenance…</div>
+      </div>
+    </div>
+    <button onclick="cnToggleChat()" style="background:none;border:none;color:#fff;font-size:18px;cursor:pointer;opacity:.7;padding:0 4px;">✕</button>
+  </div>
+  <div id="cn-chat-body" style="flex:1;padding:14px;overflow-y:auto;color:#fff;display:flex;flex-direction:column;gap:8px;">
+    <div style="background:#1e293b;border-radius:12px;padding:10px 12px;font-size:13px;color:#94a3b8;line-height:1.5;">👋 Hi! I'm your <strong style="color:#60a5fa">CivicNest Assistant</strong>.<br>Ask about <strong>rent, Razorpay, maintenance, complaints, lease</strong> or type <strong>help</strong>!</div>
+  </div>
+  <div style="display:flex;border-top:1px solid rgba(255,255,255,.1);">
+    <input type="text" id="cn-msg-input" placeholder="Ask anything…" onkeypress="if(event.key==='Enter')cnSendMsg()" style="flex:1;padding:12px 14px;border:none;background:transparent;color:#fff;font-size:13px;outline:none;">
+    <button onclick="cnSendMsg()" style="background:#3D6BE5;border:none;color:#fff;padding:12px 16px;cursor:pointer;font-size:16px;">➤</button>
+  </div>
+</div>
+
+<script>
+function cnToggleChat(){
+  const box=document.getElementById('cn-chatbox');
+  box.style.display=box.style.display==='flex'?'none':'flex';
+  if(box.style.display==='flex'){document.getElementById('cn-msg-input').focus();}
+}
+function cnGetCSRF(){return document.cookie.split('; ').find(r=>r.startsWith('csrftoken'))?.split('=')[1]||'';}
+async function cnSendMsg(){
+  const inp=document.getElementById('cn-msg-input');
+  const msg=inp.value.trim();
+  if(!msg)return;
+  const body=document.getElementById('cn-chat-body');
+  body.innerHTML+=`<div style="text-align:right;"><span style="background:#3D6BE5;color:#fff;border-radius:12px;padding:8px 12px;font-size:13px;display:inline-block;max-width:260px;word-wrap:break-word;">${msg}</span></div>`;
+  inp.value='';
+  body.scrollTop=body.scrollHeight;
+  try{
+    const res=await fetch('/chat/',{method:'POST',headers:{'Content-Type':'application/json','X-CSRFToken':cnGetCSRF()},body:JSON.stringify({message:msg})});
+    const d=await res.json();
+    const fmt=d.reply.replace(/\n/g,'<br>');
+    body.innerHTML+=`<div style="background:#1e293b;border-radius:12px;padding:10px 12px;font-size:13px;color:#94a3b8;line-height:1.6;max-width:280px;">${fmt}</div>`;
+    body.scrollTop=body.scrollHeight;
+  }catch(e){body.innerHTML+=`<div style="color:#ef4444;font-size:12px;">Error connecting. Please try again.</div>`;}
+}
+</script>
+
+{% block extra_js %}{% endblock %}
+</body>
+</html>

@@ -1,0 +1,57 @@
+{% extends "base.html" %}
+{% block title %}Admin Dashboard{% endblock %}
+{% block nav_admin %}active{% endblock %}
+{% block content %}
+<div class="shell">
+  {% with active="dash" %}{% include "partials/sidebar_admin.html" %}{% endwith %}
+  <div class="main"><div class="panel fade-up">
+    <div class="pg-intro"><h2>Platform Dashboard</h2><p>Full overview of TenantPro platform</p></div>
+    <div class="row g-3 row-cols-2 row-cols-xl-4 mb-4">
+      <div class="col"><div class="sc c-navy"><div class="sc-icon" style="background:var(--n100);font-size:20px;">🏠</div><div class="sc-lbl">Properties</div><div class="sc-val">{{ total_properties }}</div><div class="sc-trend t-neu">All types</div></div></div>
+      <div class="col"><div class="sc c-blue"><div class="sc-icon" style="background:var(--blue-l);font-size:20px;">👥</div><div class="sc-lbl">Total Users</div><div class="sc-val">{{ total_tenants|add:total_owners }}</div><div class="sc-trend t-up">{{ total_tenants }} tenants</div></div></div>
+      <div class="col"><div class="sc c-green"><div class="sc-icon" style="background:var(--green-l);font-size:20px;">💰</div><div class="sc-lbl">Revenue</div><div class="sc-val" style="font-size:18px;">₹{{ revenue }}</div><div class="sc-trend t-up">Collected</div></div></div>
+      <div class="col"><div class="sc c-amber"><div class="sc-icon" style="background:var(--a50);font-size:20px;">🔧</div><div class="sc-lbl">Open Issues</div><div class="sc-val">{{ open_maint }}</div><div class="sc-trend t-dn">Need action</div></div></div>
+    </div>
+    <div class="row g-3 mb-3">
+      <div class="col-lg-7">
+        <div class="card">
+          <div class="cd-hd"><span class="cd-title">Recent Payments</span><a href="/admin-zone/rent/" class="cd-action">View all →</a></div>
+          <table class="tp-table">
+            <thead><tr><th>Tenant</th><th>Unit</th><th>Amount</th><th>Month</th><th>Status</th></tr></thead>
+            <tbody>{% for p in recent_payments %}
+            <tr>
+              <td style="font-weight:600;">{{ p.lease.tenant.get_full_name|default:p.lease.tenant.username }}</td>
+              <td>{{ p.lease.unit.unit_number }}</td>
+              <td style="font-family:var(--mono);font-weight:700;">₹{{ p.amount }}</td>
+              <td>{{ p.month_year }}</td>
+              <td><span class="badge b-{{ p.status }}">{{ p.get_status_display }}</span></td>
+            </tr>
+            {% empty %}<tr><td colspan="5" style="text-align:center;padding:20px;color:var(--g300);">No payments</td></tr>
+            {% endfor %}</tbody>
+          </table>
+        </div>
+      </div>
+      <div class="col-lg-5">
+        <div class="card mb-3">
+          <div class="cd-hd"><span class="cd-title">Open Complaints</span><a href="/admin-zone/maintenance/" class="cd-action">All →</a></div>
+          {% for c in recent_complaints %}
+          <div class="act-item d-flex align-items-start gap-2">
+            <div class="act-dot" style="background:var(--red);"></div>
+            <div><div class="act-txt">{{ c.title }}</div><div class="act-time">{{ c.tenant.get_full_name|default:c.tenant.username }}</div></div>
+          </div>
+          {% empty %}<div style="text-align:center;padding:20px;color:var(--g300);font-size:13px;">No open complaints ✅</div>{% endfor %}
+        </div>
+        <div class="card">
+          <div class="cd-hd"><span class="cd-title">Quick Links</span></div>
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;">
+            <a href="/admin-zone/users/" class="btn-tp btn-ghost btn-sm justify-content-center">👥 Users</a>
+            <a href="/admin-zone/properties/" class="btn-tp btn-ghost btn-sm justify-content-center">🏠 Properties</a>
+            <a href="/admin-zone/verify/" class="btn-tp btn-ghost btn-sm justify-content-center">✅ Verify</a>
+            <a href="/admin-zone/reports/" class="btn-tp btn-ghost btn-sm justify-content-center">📈 Reports</a>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div></div>
+</div>
+{% endblock %}

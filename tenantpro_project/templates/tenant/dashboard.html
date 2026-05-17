@@ -1,0 +1,102 @@
+{% extends "base.html" %}
+{% block title %}My Dashboard{% endblock %}
+{% block nav_tenant %}active{% endblock %}
+{% block content %}
+{% load static %}
+<div class="shell">
+  {% with active="dash" %}{% include "partials/sidebar_tenant.html" %}{% endwith %}
+  <div class="main">
+    <div class="panel fade-up">
+      <div class="pg-intro"><h2>My Dashboard</h2><p>Your rent, property & service overview</p></div>
+
+      <!-- Fix 1i: Prominent Due Alert Banner from Owner -->
+    {% if due_alert %}
+    <div style="background:linear-gradient(135deg,#78350F,#B45309);color:#fff;border-radius:16px;padding:20px 24px;margin-bottom:20px;display:flex;align-items:center;justify-content:space-between;gap:16px;box-shadow:0 8px 24px rgba(180,83,9,.3);">
+      <div style="display:flex;align-items:center;gap:14px;">
+        <div style="font-size:32px;">🔔</div>
+        <div>
+          <div style="font-size:11px;font-weight:700;opacity:.8;letter-spacing:1px;text-transform:uppercase;">Owner Sent a Reminder</div>
+          <div style="font-size:18px;font-weight:800;margin:4px 0;">{{ due_alert.title }}</div>
+          <div style="font-size:13px;opacity:.85;">{{ due_alert.message }}</div>
+        </div>
+      </div>
+      <a href="/tenant/rent/" style="background:#fff;color:#B45309;font-weight:800;font-size:13px;padding:12px 20px;border-radius:10px;text-decoration:none;white-space:nowrap;box-shadow:0 4px 12px rgba(0,0,0,.15);">💳 Pay Now →</a>
+    </div>
+    {% endif %}
+
+    {% if next_due %}
+      <div class="rent-alert">
+        <div style="display:flex;align-items:center;gap:14px;">
+          <div class="rent-alert-icon">⏰</div>
+          <div><div style="font-size:14px;font-weight:800;color:#fff;">Rent Due — ₹{{ next_due.amount }}</div>
+          <div style="font-size:12px;color:rgba(255,255,255,.7);">Due: {{ next_due.due_date|date:"d M Y" }} · {{ next_due.month_year }}</div></div>
+        </div>
+        <a href="/tenant/rent/" class="btn-tp" style="background:#fff;color:var(--a500);font-weight:800;padding:9px 20px;border-radius:var(--r);">Pay Now →</a>
+      </div>
+      {% endif %}
+
+      <div class="row g-3 row-cols-1 row-cols-md-3 mb-4 delay-1">
+        <div class="col"><div class="sc c-navy"><div class="sc-icon" style="background:var(--n100);font-size:20px;">💰</div><div class="sc-lbl">Monthly Rent</div>
+        <div class="sc-val">{% if lease %}₹{{ lease.monthly_rent }}{% else %}—{% endif %}</div>
+        <div class="sc-trend t-amber">{% if next_due %}Due {{ next_due.due_date|date:"d M" }}{% else %}No due{% endif %}</div></div></div>
+        <div class="col"><div class="sc c-amber"><div class="sc-icon" style="background:var(--a50);font-size:20px;">🔧</div><div class="sc-lbl">Open Requests</div>
+        <div class="sc-val">{{ maint|length }}</div><div class="sc-trend t-up">Active</div></div></div>
+        <div class="col"><div class="sc c-blue"><div class="sc-icon" style="background:var(--blue-l);font-size:20px;">📄</div><div class="sc-lbl">Lease Expires</div>
+        <div class="sc-val">{% if lease %}{{ lease.end_date|date:"M 'y" }}{% else %}—{% endif %}</div>
+        <div class="sc-trend t-neu">{% if lease %}{{ lease.months_remaining }} months left{% else %}No lease{% endif %}</div></div></div>
+      </div>
+
+      <div class="row g-3 mb-3 delay-2">
+        {% if lease %}
+        <div class="col-lg-6">
+          <div class="card">
+            <div class="cd-hd"><span class="cd-title">My Residence</span></div>
+            <div style="background:linear-gradient(135deg,var(--n800),var(--n600));border-radius:var(--r);padding:16px;margin-bottom:14px;position:relative;overflow:hidden;">
+              <div style="position:absolute;top:-20px;right:-20px;width:80px;height:80px;border-radius:50%;background:rgba(255,255,255,.05);"></div>
+              <div style="font-size:11px;font-weight:700;letter-spacing:.07em;text-transform:uppercase;color:rgba(255,255,255,.4);margin-bottom:8px;">Current Residence</div>
+              <div style="font-size:18px;font-weight:800;color:#fff;margin-bottom:4px;">{{ lease.unit.property.name }}</div>
+              <div style="font-size:13px;color:rgba(255,255,255,.6);margin-bottom:10px;">Unit {{ lease.unit.unit_number }} · {{ lease.unit.property.city }}</div>
+              <div style="display:flex;gap:20px;flex-wrap:wrap;">
+                <div><div style="font-size:10px;color:rgba(255,255,255,.4);">Monthly Rent</div><div style="font-size:16px;font-weight:800;color:var(--a300);">₹{{ lease.monthly_rent }}</div></div>
+                <div><div style="font-size:10px;color:rgba(255,255,255,.4);">Owner</div><div style="font-size:13px;font-weight:700;color:#fff;">{{ lease.owner.get_full_name|default:lease.owner.username }}</div></div>
+                <div><div style="font-size:10px;color:rgba(255,255,255,.4);">Lease</div><div style="font-size:13px;font-weight:700;color:#fff;">{{ lease.start_date|date:"M y" }} – {{ lease.end_date|date:"M y" }}</div></div>
+              </div>
+            </div>
+          </div>
+        </div>
+        {% endif %}
+        <div class="col-lg-6">
+          <div class="card">
+            <div class="cd-hd"><span class="cd-title">🔔 Notifications</span><a href="/tenant/notifications/" class="cd-action">View all →</a></div>
+            {% for n in notifs %}
+            <div class="act-item d-flex align-items-start gap-2">
+              <div class="act-dot" style="background:{% if n.notif_type == 'success' %}var(--green){% elif n.notif_type == 'error' %}var(--red){% elif n.notif_type == 'warning' %}var(--a400){% else %}var(--n400){% endif %};"></div>
+              <div><div class="act-txt">{{ n.title }}</div><div class="act-time">{{ n.message|truncatechars:60 }}</div><div class="act-time">{{ n.created_at|timesince }} ago</div></div>
+            </div>
+            {% empty %}<div style="text-align:center;padding:20px;color:var(--g300);font-size:13px;">No new notifications</div>
+            {% endfor %}
+          </div>
+        </div>
+      </div>
+
+      {% if maint %}
+      <div class="card delay-3">
+        <div class="cd-hd"><span class="cd-title">🔧 Maintenance Requests</span><a href="/tenant/maintenance/" class="cd-action">View all →</a></div>
+        <table class="tp-table">
+          <thead><tr><th>#</th><th>Title</th><th>Category</th><th>Priority</th><th>Status</th><th>Date</th></tr></thead>
+          <tbody>{% for r in maint %}
+          <tr><td style="font-family:var(--mono);color:var(--g400);">#{{ r.id }}</td>
+          <td style="font-weight:600;color:var(--g900);">{{ r.title }}</td>
+          <td>{{ r.get_category_display }}</td>
+          <td><span class="badge {% if r.priority == 'urgent' %}b-overdue{% elif r.priority == 'high' %}b-pending{% else %}b-info{% endif %}">{{ r.get_priority_display }}</span></td>
+          <td><span class="badge {% if r.status == 'resolved' %}b-paid{% elif r.status == 'in_progress' %}b-progress{% elif r.status == 'open' %}b-overdue{% else %}b-pending{% endif %}">{{ r.get_status_display }}</span></td>
+          <td style="color:var(--g300);">{{ r.created_at|date:"d M" }}</td></tr>
+          {% endfor %}</tbody>
+        </table>
+      </div>
+      {% endif %}
+    </div>
+  </div>
+</div>
+<script>const tp=document.getElementById("tp-toggle");const sb=document.getElementById("tp-sidebar");const ov=document.getElementById("tp-overlay");if(tp){tp.onclick=()=>{sb.classList.toggle("open");ov.style.display=sb.classList.contains("open")?"block":"none";};}if(ov){ov.onclick=()=>{sb.classList.remove("open");ov.style.display="none";};}</script>
+{% endblock %}

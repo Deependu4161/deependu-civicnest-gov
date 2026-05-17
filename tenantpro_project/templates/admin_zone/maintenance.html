@@ -1,0 +1,39 @@
+{% extends "base.html" %}
+{% block title %}Maintenance{% endblock %}
+{% block nav_admin %}active{% endblock %}
+{% block content %}
+<div class="shell">
+  {% with active="maint" %}{% include "partials/sidebar_admin.html" %}{% endwith %}
+  <div class="main"><div class="panel fade-up">
+    <div class="pg-intro"><h2>Maintenance Requests</h2><p>All maintenance across properties</p></div>
+    <div class="card">
+      {% for r in reqs %}
+      <div style="padding:16px;border-bottom:1px solid var(--g50);">
+        <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:12px;flex-wrap:wrap;">
+          <div style="flex:1;">
+            <div style="display:flex;align-items:center;gap:8px;margin-bottom:4px;flex-wrap:wrap;">
+              <span style="font-weight:800;color:var(--g900);">{{ r.title }}</span>
+              <span class="badge {% if r.priority == 'urgent' %}b-overdue{% elif r.priority == 'high' %}b-pending{% else %}b-info{% endif %}">{{ r.get_priority_display }}</span>
+              <span class="badge {% if r.status == 'resolved' %}b-paid{% elif r.status == 'in_progress' %}b-progress{% elif r.status == 'open' %}b-overdue{% else %}b-pending{% endif %}">{{ r.get_status_display }}</span>
+            </div>
+            <div style="font-size:13px;color:var(--g500);">{{ r.tenant.get_full_name|default:r.tenant.username }} · {{ r.unit.property.name }} — Unit {{ r.unit.unit_number }}</div>
+            <div style="font-size:12.5px;color:var(--g400);">{{ r.description|truncatechars:80 }}</div>
+          </div>
+          <form method="post" style="display:flex;flex-direction:column;gap:6px;min-width:180px;">{% csrf_token %}
+            <input type="hidden" name="req_id" value="{{ r.id }}">
+            <select name="status" class="form-ctrl" style="font-size:12.5px;padding:6px 10px;">
+              <option value="assigned" {% if r.status == 'assigned' %}selected{% endif %}>Assigned</option>
+              <option value="in_progress" {% if r.status == 'in_progress' %}selected{% endif %}>In Progress</option>
+              <option value="resolved" {% if r.status == 'resolved' %}selected{% endif %}>Resolved</option>
+              <option value="closed" {% if r.status == 'closed' %}selected{% endif %}>Closed</option>
+            </select>
+            <input type="text" name="notes" class="form-ctrl" placeholder="Admin note…" style="font-size:12.5px;padding:6px 10px;">
+            <button type="submit" class="btn-tp btn-primary btn-xs">Update</button>
+          </form>
+        </div>
+      </div>
+      {% empty %}<div style="text-align:center;padding:40px;color:var(--g300);">No maintenance requests</div>{% endfor %}
+    </div>
+  </div></div>
+</div>
+{% endblock %}

@@ -1,0 +1,49 @@
+{% extends "base.html" %}
+{% block title %}Society Dashboard{% endblock %}
+{% block nav_sa %}active{% endblock %}
+{% block content %}
+<div class="shell">
+  {% with active="dash" %}{% include "partials/sidebar_sa.html" %}{% endwith %}
+  <div class="main"><div class="panel fade-up">
+    <div class="pg-intro"><h2>Society Dashboard</h2><p>Community overview and management</p></div>
+    <div class="row g-3 row-cols-2 row-cols-xl-4 mb-4">
+      <div class="col"><div class="sc c-cyan"><div class="sc-icon" style="background:var(--cyan-l);font-size:20px;">🏢</div><div class="sc-lbl">Properties</div><div class="sc-val">{{ props|length }}</div></div></div>
+      <div class="col"><div class="sc c-blue"><div class="sc-icon" style="background:var(--blue-l);font-size:20px;">🏠</div><div class="sc-lbl">Units</div><div class="sc-val">{{ total_units }}</div><div class="sc-trend t-up">{{ occupied }} occupied</div></div></div>
+      <div class="col"><div class="sc c-green"><div class="sc-icon" style="background:var(--green-l);font-size:20px;">👥</div><div class="sc-lbl">Residents</div><div class="sc-val">{{ active_tenants }}</div></div></div>
+      <div class="col"><div class="sc c-amber"><div class="sc-icon" style="background:var(--a50);font-size:20px;">🔧</div><div class="sc-lbl">Open Issues</div><div class="sc-val">{{ open_maint }}</div></div></div>
+    </div>
+    <div class="row g-3">
+      <div class="col-lg-7"><div class="card"><div class="cd-hd"><span class="cd-title">📢 Latest Announcements</span><a href="/society-admin/announcements/" class="cd-action">Manage →</a></div>
+        {% for a in announcements %}<div style="padding:12px;border-bottom:1px solid var(--g50);"><div style="font-weight:700;color:var(--g900);">{% if a.is_pinned %}📌 {% endif %}{{ a.title }}</div><div style="font-size:12.5px;color:var(--g400);margin-top:2px;">{{ a.message|truncatechars:80 }}</div><div style="font-size:11px;color:var(--g300);margin-top:4px;">{{ a.created_at|date:"d M Y" }}</div></div>
+        {% empty %}<div style="text-align:center;padding:20px;color:var(--g300);">No announcements yet</div>{% endfor %}
+      </div></div>
+      <div class="col-lg-5"><div class="card"><div class="cd-hd"><span class="cd-title">🔧 Open Maintenance</span><a href="/society-admin/maintenance/" class="cd-action">All →</a></div>
+        {% for r in open_maint_list %}<div class="act-item d-flex gap-2"><div class="act-dot" style="background:{% if r.priority == 'urgent' %}var(--red){% else %}var(--a500){% endif %};"></div><div><div class="act-txt">{{ r.title }}</div><div class="act-time">{{ r.tenant.get_full_name|default:r.tenant.username }} · {{ r.unit.unit_number }}</div></div></div>
+        {% empty %}<div style="text-align:center;padding:20px;color:var(--g300);">No open issues ✅</div>{% endfor %}
+      </div></div>
+    </div>
+    <!-- Fix 5: Complaints visible to society admin -->
+    {% if recent_complaints %}
+    <div class="card mt-3">
+      <div class="cd-hd">
+        <span class="cd-title">📝 Recent Complaints
+          {% if open_complaints %}<span style="background:#FEF2F2;color:#DC2626;font-size:11px;font-weight:700;padding:2px 8px;border-radius:20px;margin-left:6px;">{{ open_complaints }} Open</span>{% endif %}
+        </span>
+        <a href="/society-admin/complaints/" class="cd-action">All →</a>
+      </div>
+      {% for c in recent_complaints %}
+      <div style="padding:12px 18px;border-bottom:1px solid var(--g50);display:flex;align-items:center;gap:12px;">
+        <div style="width:8px;height:8px;border-radius:50%;background:{% if c.status == 'open' %}#EF4444{% elif c.status == 'under_review' %}#F59E0B{% else %}#22C55E{% endif %};flex-shrink:0;"></div>
+        <div style="flex:1;">
+          <div style="font-weight:700;font-size:13px;">{{ c.title }}</div>
+          <div style="font-size:11px;color:var(--g300);">{{ c.tenant.get_full_name|default:c.tenant.username }} · {{ c.unit.property.name }} Unit {{ c.unit.unit_number }}</div>
+        </div>
+        <span class="badge b-{{ c.status }}" style="font-size:10px;">{{ c.get_status_display }}</span>
+      </div>
+      {% endfor %}
+    </div>
+    {% endif %}
+
+  </div></div>
+</div>
+{% endblock %}

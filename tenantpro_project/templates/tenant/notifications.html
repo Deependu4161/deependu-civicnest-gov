@@ -1,0 +1,151 @@
+{% extends "base.html" %}
+{% block title %}Notifications{% endblock %}
+{% block nav_tenant %}active{% endblock %}
+
+{% block extra_css %}
+<style>
+:root{--rz:#3D6BE5;--ind:#1A1F5E;--bdr:#E8EDF5;--bg:#F4F7FF}
+.notif-page{max-width:800px;margin:0 auto}
+.notif-header-card{background:linear-gradient(135deg,#1A1F5E,#3D6BE5);border-radius:18px;padding:24px 28px;
+  color:#fff;margin-bottom:24px;display:flex;align-items:center;justify-content:space-between}
+.nh-left h2{font-size:22px;font-weight:800;margin:0 0 4px}
+.nh-left p{font-size:13px;opacity:.75;margin:0}
+.nh-stats{display:flex;gap:20px}
+.nh-stat{text-align:center}
+.nh-stat-val{font-size:24px;font-weight:900;font-family:monospace;line-height:1}
+.nh-stat-lbl{font-size:10px;opacity:.7;font-weight:700;letter-spacing:.5px;text-transform:uppercase}
+.notif-filters{display:flex;gap:8px;margin-bottom:16px;flex-wrap:wrap;align-items:center}
+.nf-pill{padding:7px 16px;border-radius:20px;border:1.5px solid var(--bdr);background:#fff;font-size:12px;
+  font-weight:700;color:#64748B;cursor:pointer;transition:all .15s;text-decoration:none}
+.nf-pill:hover,.nf-pill.active{background:#EEF2FF;border-color:var(--rz);color:var(--rz)}
+.mark-btn{margin-left:auto;padding:8px 18px;border:none;border-radius:10px;
+  background:linear-gradient(135deg,var(--rz),#6366F1);color:#fff;font-size:12px;font-weight:700;
+  cursor:pointer;display:flex;align-items:center;gap:6px;transition:all .2s}
+.mark-btn:hover{opacity:.88}
+.notif-list{background:#fff;border:1.5px solid var(--bdr);border-radius:18px;overflow:hidden;
+  box-shadow:0 2px 16px rgba(61,107,229,.07)}
+.notif-item{padding:16px 20px;border-bottom:1px solid var(--bdr);display:flex;gap:14px;
+  align-items:flex-start;transition:background .15s}
+.notif-item:last-child{border-bottom:none}
+.notif-item:hover{background:#FAFBFF}
+.notif-item.unread{background:#F8FAFF;border-left:4px solid var(--rz)}
+.notif-item.read{border-left:4px solid transparent}
+.ni-icon-wrap{width:42px;height:42px;border-radius:12px;display:flex;align-items:center;
+  justify-content:center;font-size:18px;flex-shrink:0}
+.ni-icon-wrap.success{background:#ECFDF5}
+.ni-icon-wrap.error{background:#FEF2F2}
+.ni-icon-wrap.warning{background:#FFFBEB}
+.ni-icon-wrap.info{background:#EEF2FF}
+.ni-body{flex:1;min-width:0}
+.ni-title{font-size:14px;font-weight:700;color:#1A1F5E;margin-bottom:3px}
+.ni-msg{font-size:13px;color:#475569;line-height:1.5}
+.ni-foot{display:flex;align-items:center;gap:12px;margin-top:6px}
+.ni-time{font-size:11px;color:#94A3B8}
+.ni-type{font-size:10px;font-weight:700;padding:2px 8px;border-radius:20px;text-transform:uppercase;letter-spacing:.5px}
+.ni-type.success{background:#ECFDF5;color:#16A34A}
+.ni-type.error{background:#FEF2F2;color:#DC2626}
+.ni-type.warning{background:#FFFBEB;color:#D97706}
+.ni-type.info{background:#EEF2FF;color:var(--rz)}
+.ni-unread-dot{width:8px;height:8px;border-radius:50%;background:var(--rz);flex-shrink:0;margin-top:6px}
+.notif-empty{text-align:center;padding:60px 20px;color:#94A3B8}
+.notif-empty-icon{font-size:48px;margin-bottom:12px}
+</style>
+{% endblock %}
+
+{% block content %}
+{% with active="notifs" %}
+<div class="shell">
+  {% include "partials/sidebar_tenant.html" %}
+  <div class="main"><div class="panel fade-up">
+
+    <div class="notif-page">
+      <div class="notif-header-card">
+        <div class="nh-left">
+          <h2>🔔 Notifications</h2>
+          <p>All your alerts, payment updates &amp; announcements</p>
+        </div>
+        <div class="nh-stats">
+          <div class="nh-stat">
+            <div class="nh-stat-val">{{ notifs|length }}</div>
+            <div class="nh-stat-lbl">Total</div>
+          </div>
+          <div class="nh-stat">
+            <div class="nh-stat-val">{{ unread_count }}</div>
+            <div class="nh-stat-lbl">Unread</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="notif-filters">
+        <a href="#" class="nf-pill active" onclick="filterNotifs('all',this)">All</a>
+        <a href="#" class="nf-pill" onclick="filterNotifs('success',this)">✅ Payments</a>
+        <a href="#" class="nf-pill" onclick="filterNotifs('info',this)">📢 Updates</a>
+        <a href="#" class="nf-pill" onclick="filterNotifs('warning',this)">⚠️ Alerts</a>
+        <a href="#" class="nf-pill" onclick="filterNotifs('error',this)">❌ Errors</a>
+        <button class="mark-btn" onclick="markAllReadPage()"><i class="fa fa-check-double"></i> Mark all read</button>
+      </div>
+
+      <div class="notif-list" id="notifList">
+        {% for n in notifs %}
+        <div class="notif-item {% if n.is_read %}read{% else %}unread{% endif %}" data-type="{{ n.notif_type }}">
+          <div class="ni-icon-wrap {{ n.notif_type }}">
+            {% if n.notif_type == 'success' %}✅
+            {% elif n.notif_type == 'error' %}❌
+            {% elif n.notif_type == 'warning' %}⚠️
+            {% else %}📢{% endif %}
+          </div>
+          <div class="ni-body">
+            <div class="ni-title">{{ n.title }}</div>
+            <div class="ni-msg">{{ n.message }}</div>
+            <div class="ni-foot">
+              <span class="ni-time"><i class="fa fa-clock" style="opacity:.5;margin-right:4px"></i>{{ n.created_at|date:"d M Y, h:i A" }}</span>
+              <span class="ni-type {{ n.notif_type }}">{{ n.notif_type }}</span>
+            </div>
+          </div>
+          {% if not n.is_read %}<div class="ni-unread-dot"></div>{% endif %}
+        </div>
+        {% empty %}
+        <div class="notif-empty">
+          <div class="notif-empty-icon">🔔</div>
+          <div style="font-size:16px;font-weight:700;color:#475569;margin-bottom:6px">No notifications yet</div>
+          <div style="font-size:13px">You'll see rent updates, maintenance alerts, and announcements here</div>
+        </div>
+        {% endfor %}
+      </div>
+    </div>
+
+  </div></div>
+</div>
+{% endwith %}
+{% endblock %}
+
+{% block extra_js %}
+<script>
+function filterNotifs(type,el){
+  document.querySelectorAll('.nf-pill').forEach(p=>p.classList.remove('active'));
+  el.classList.add('active');
+  document.querySelectorAll('.notif-item').forEach(item=>{
+    item.style.display=(type==='all'||item.dataset.type===type)?'':'none';
+  });
+  return false;
+}
+async function markAllReadPage(){
+  const r=await fetch('/api/notif/mark-all/',{method:'POST',headers:{'X-CSRFToken':getCsrf()}});
+  if((await r.json()).success){
+    document.querySelectorAll('.notif-item').forEach(el=>{
+      el.classList.remove('unread');el.classList.add('read');
+      const dot=el.querySelector('.ni-unread-dot');if(dot)dot.remove();
+    });
+    showToast('✅','All notifications marked as read');
+  }
+}
+function getCsrf(){return document.cookie.split(';').reduce((v,c)=>{const[k,val]=c.trim().split('=');return k.trim()==='csrftoken'?decodeURIComponent(val):v;},'');}
+function showToast(icon,msg){
+  const t=document.createElement('div');
+  t.style.cssText='position:fixed;bottom:24px;right:24px;background:#1A1F5E;color:#fff;padding:14px 20px;border-radius:12px;font-size:13px;font-weight:600;z-index:99999;display:flex;gap:10px;align-items:center;box-shadow:0 8px 24px rgba(0,0,0,.2)';
+  t.innerHTML=`<span>${icon}</span><span>${msg}</span>`;
+  document.body.appendChild(t);
+  setTimeout(()=>t.remove(),3000);
+}
+</script>
+{% endblock %}
