@@ -10,6 +10,7 @@ INSTALLED_APPS = [
 ]
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
+    'whitenoise.middleware.WhiteNoiseMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
     'django.middleware.common.CommonMiddleware',
     'django.middleware.csrf.CsrfViewMiddleware',
@@ -43,3 +44,4 @@ LOGIN_URL = '/accounts/login/'
 # ── Razorpay Payment Gateway ────────────────────────────
 RAZORPAY_KEY_ID     = 'rzp_test_Smz4Dj6EYe0uGm'      # Replace with your Razorpay Test Key ID
 RAZORPAY_KEY_SECRET = 'nJQK4tZbmihVZ5s7HXy4TD5z'   # Replace with your Razorpay Test Key Secret
+STATICFILES_STORAGE = 'whitenoise.storage.CompressedManifestStaticFilesStorage'
